@@ -28,7 +28,10 @@ public class SQLiteDAO {
     private SQLiteDBHelper sqLiteDBHelper;
     private String[] PerusalsColumns = {
             SQLiteDBHelper.COLUMN_ID,
-            SQLiteDBHelper.COLUMN_TITLE
+            SQLiteDBHelper.COLUMN_TITLE,
+            SQLiteDBHelper.COLUMN_TEXT,
+            SQLiteDBHelper.COLUMN_SPEED,
+            SQLiteDBHelper.COLUMN_MODE
     };
 
     public SQLiteDAO(Context context) {
@@ -80,6 +83,13 @@ public class SQLiteDAO {
                 contentValues
         );
 
+        if ( insertId < 0 ) {
+            Toast.makeText(context, "Failed to add perusal to DB: " + perusalTitle, Toast.LENGTH_SHORT).show();
+            return perusal;
+        }
+
+        Log.d(TAG, "Insert ID: " + insertId);
+
         cursor = sqLiteDatabase.query(
                 SQLiteDBHelper.TABLE_PERUSALS,
                 PerusalsColumns,
@@ -87,9 +97,16 @@ public class SQLiteDAO {
                 null, null, null, null
         );
 
-        cursor.moveToFirst();
-        Perusal newPerusal = cursorToPerusal(cursor);
+        Perusal newPerusal;
+        if ( cursor.moveToFirst() && cursor.getCount() != 0 ) {
+             newPerusal = cursorToPerusal(cursor);
+        }
+        else
+        {
+            newPerusal = perusal;
+        }
         cursor.close();
+
         return newPerusal;
     }
 
@@ -144,10 +161,13 @@ public class SQLiteDAO {
     }
 
     private Perusal cursorToPerusal(Cursor cursor) {
-        Perusal Perusal = new Perusal();
-        Perusal.setId(cursor.getLong(0));
-        Perusal.setTitle(cursor.getString(1));
-        return Perusal;
+        Perusal perusal = new Perusal();
+        perusal.setId(cursor.getLong(0));
+        perusal.setTitle(cursor.getString(1));
+        perusal.setText(cursor.getString(2));
+        perusal.setSpeed(cursor.getInt(3));
+        perusal.setModeInt(cursor.getInt(4));
+        return perusal;
     }
 
 
