@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="red_weak">#c3ff7e74</color>
+    <color name="red_med">#c3ff4f4a</color>
+    <color name="red">#ff0000</color>
+    <color name="green_weak">#7881ff6a</color>
+    <color name="green_med">#bb4bff39</color>
+    <color name="green_strong">#ca0cff08</color>
+    <color name="orange">#ff5500</color>
+    <color name="white">#ffffff</color>
+    <color name="transparent">#00000000</color>
+    <color name="date_color">#999999</color>
+    <color name="black">#000000</color>
+    <color name="gray">#999999</color>
+    <color name="blue_weak">#ff3399ff</color>
+    <color name="blue">#0066cc</color>
+    <color name="gold">#e6b121</color>
+    <color name="blueback">#99FFFF</color>
+    <color name="articlecolor">#3399FF</color>
+    <color name="article_title">#3399FF</color>
+    <color name="cachecolor">#8ad0e8</color>
+</resources>
+
+    <!--Android Color Guidlines-->
+    <!--33B5E5-->
+    <!--AA66CC-->
+    <!--99CC00-->
+    <!--FFBB33-->
+    <!--FF4444-->
+    <!--0099CC-->
+    <!--9933CC-->
+    <!--669900-->
+    <!--FF8800-->
+    <!--CC0000-->
+
+    <!--51 181 229-->
+    <!--170 102 204-->
+    <!--153 204   0-->
+    <!--255 187  51-->
+    <!--255  68  68-->
+    <!--0 153 204-->
+    <!--153  51 204-->
+    <!--102 153   0-->
+    <!--255 136   0-->
+    <!--204   0   0-->

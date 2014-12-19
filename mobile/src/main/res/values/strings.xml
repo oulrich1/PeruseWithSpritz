@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Perusal</string>
+    <string name="title_section1">Peruse</string>
+    <string name="title_section2">Recent</string>
+    <string name="title_section3">OCR</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_spritz_selection">Spritz This!</string>
+    <string name="action_settings">Settings</string>
+
+</resources>
