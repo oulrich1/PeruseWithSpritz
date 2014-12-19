@@ -23,6 +23,7 @@ public class SQLiteDBHelper extends SQLiteOpenHelper {
     public static final String COLUMN_TITLE = "title";
     public static final String COLUMN_TEXT  = "textValue";
     public static final String COLUMN_SPEED = "speed";
+    public static final String COLUMN_MODE  = "mode";
 
     /** Database sql statements */
     private static final String CREATE_TABLE_PERUSALS= "create table "
@@ -31,6 +32,7 @@ public class SQLiteDBHelper extends SQLiteOpenHelper {
             + COLUMN_TITLE + " text not null, "
             + COLUMN_TEXT + " text not null, "
             + COLUMN_SPEED + " integer not null"
+            + COLUMN_MODE + " integer not null"
             + ");";
 
     private static final String DB_PERUSALS_TABLE_DROP = "drop table if exists "

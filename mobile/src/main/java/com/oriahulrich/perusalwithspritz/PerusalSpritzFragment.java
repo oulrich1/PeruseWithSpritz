@@ -58,6 +58,7 @@ public class PerusalSpritzFragment
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static final String ARG_MODE = "section_number";
     private static final String ARG_SPRITZ_TEXT = "spritz_text";
+    private static final String ARG_SHOULD_SAVE = "shouldSavePerusal";
 
     private String mTextSpritz;
     private View mRootView;
@@ -91,22 +92,20 @@ public class PerusalSpritzFragment
                                                     boolean shouldSavePerusal )
     {
         Log.d(TAG, "FRAGMENT newInstance");
-        PerusalSpritzFragment fragment = new PerusalSpritzFragment(shouldSavePerusal);
-        Bundle args = new Bundle();
 
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_SHOULD_SAVE, shouldSavePerusal);
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         args.putInt(ARG_MODE, mode);
         args.putString(ARG_SPRITZ_TEXT, textSpritz);
+
+        PerusalSpritzFragment fragment = new PerusalSpritzFragment();
         fragment.setArguments(args);
         return fragment;
     }
 
     public PerusalSpritzFragment() {
         common_construct();
-    }
-    public PerusalSpritzFragment( boolean shouldSavePerusal ) {
-        common_construct();
-        mShouldSavePerusal = shouldSavePerusal;
     }
 
     private void common_construct() {
@@ -189,6 +188,7 @@ public class PerusalSpritzFragment
 
         if (mTextSpritz != null && !mTextSpritz.isEmpty()) {
             doSpritzing(mTextSpritz);
+            mShouldSavePerusal = getArguments().getBoolean(ARG_SHOULD_SAVE);
             if ( mShouldSavePerusal ) {
                 createAddPerusalToDB(sqLiteDAO, mTextSpritz);
             }

@@ -72,6 +72,7 @@ public class SQLiteDAO {
         contentValues.put( SQLiteDBHelper.COLUMN_TITLE, perusalTitle.toLowerCase().trim() );
         contentValues.put( SQLiteDBHelper.COLUMN_TEXT,  perusal.getText().toLowerCase().trim() );
         contentValues.put( SQLiteDBHelper.COLUMN_SPEED, perusal.getSpeed() );
+        contentValues.put( SQLiteDBHelper.COLUMN_MODE, perusal.getMode().ordinal() );
 
         long insertId = sqLiteDatabase.insert(
                 SQLiteDBHelper.TABLE_PERUSALS,
