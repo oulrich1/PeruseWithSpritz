@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ListFragment;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
@@ -103,7 +104,7 @@ public class RecentPerusalsFragment extends ListFragment {
                 recentPerusalsArrayList );
         listView.setAdapter(recentPerusalsAdapter);
 
-        setUpListViewItemClickHandler( listView );
+        setUpListViewItemClickHandler(listView);
 
         registerForContextMenu(listView);
     }
@@ -166,10 +167,58 @@ public class RecentPerusalsFragment extends ListFragment {
             case R.id.actionRemovePerusal:
                 return removePerusal( recentPerusal );
             case R.id.actionRenameTitle:
-                return showRenamePerusalDialog( recentPerusal );
+                return showRenamePerusalDialog(recentPerusal,itemInfo.position);
             default:
                 return super.onContextItemSelected(item);
         }
+    }
+
+
+    private boolean showRenamePerusalDialog( Perusal perusal, int position ) {
+        /* open a dialog that asks the user for a new name for this perusal */
+//        Toast.makeText( getActivity(),
+//                "Not implemented yet!",
+//                Toast.LENGTH_SHORT).show();
+
+        final Perusal perusalFinal = perusal;
+        final String oldTitle = perusal.getTitle();
+        final int pos = position;
+
+        /* show dialog - get new title */
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        View  editPerusalTitleContentView = View.inflate(getActivity(),
+                R.layout.edit_perusal_content_view, null);
+
+        final EditText perusalTitleInputEditText =
+                (EditText) editPerusalTitleContentView.findViewById(R.id.editPerusalTitleEditText);
+        perusalTitleInputEditText.setText(perusal.getTitle());
+        perusalTitleInputEditText.setSelection(perusalTitleInputEditText.getText().length());
+
+        builder.setTitle("Rename Perusal Title");
+        builder.setView(editPerusalTitleContentView);
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                // update the perusal title to the new one
+                String newTitle = perusalTitleInputEditText.getText().toString();
+                sqLiteDAO.updatePerusalTitle(oldTitle, newTitle);
+                recentPerusalsAdapter.getItem(pos)
+                        .setTitle(perusalTitleInputEditText.getText().toString());
+                recentPerusalsAdapter.notifyDataSetChanged();
+                // recentPerusalsAdapter.itemClickListener(v, pos);
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+
+        return true;
     }
 
     private boolean removePerusal( Perusal perusal ) {
@@ -192,15 +241,6 @@ public class RecentPerusalsFragment extends ListFragment {
             isSuccess = false;
         }
         return isSuccess;
-    }
-
-
-    private boolean showRenamePerusalDialog( Perusal perusal ) {
-        /* open a dialog that asks the user for a new name for this perusal */
-        Toast.makeText( getActivity(),
-                        "Not implemented yet!",
-                        Toast.LENGTH_SHORT).show();
-        return true; // hesitaantly
     }
 
 

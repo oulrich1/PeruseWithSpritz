@@ -130,7 +130,7 @@ public class SQLiteDAO {
         }
 
         ContentValues newContentValues = new ContentValues();
-        newContentValues.put("title", newPerusalTitle.toLowerCase().trim());
+        newContentValues.put("title", newPerusalTitle.trim());
 
         return sqLiteDatabase.update(
                 SQLiteDBHelper.TABLE_PERUSALS,
