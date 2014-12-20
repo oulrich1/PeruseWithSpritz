@@ -36,6 +36,8 @@ public class PerusalEditTextFragment extends Fragment {
     private String mText;           // text, which could be initialized with share via feature
     private EditText mEditText;     // the editable text view which will update mText, when necessary
 
+    private int mUsageState; // for fun (what usage message shall we show?!)
+
     /**
      * Returns a new instance of this fragment for the given section
      * number.
@@ -55,6 +57,7 @@ public class PerusalEditTextFragment extends Fragment {
 
     public PerusalEditTextFragment() {
         mText = "";
+        mUsageState = 1;
     }
 
     @Override
@@ -82,6 +85,39 @@ public class PerusalEditTextFragment extends Fragment {
         inflater.inflate(R.menu.edit_text_and_selection, menu);
     }
 
+    private void longToast( String msg ) {
+        Toast.makeText( getActivity(), msg,
+                Toast.LENGTH_LONG ).show();
+    }
+
+    public void usage() {
+        // a playful way of displaying the usage..
+        switch (mUsageState)
+        {
+            case 1:
+                longToast("Type or paste some text first!");
+                mUsageState = 2;
+                break;
+            case 2:
+                longToast("You can also share text from your web browser");
+                mUsageState = 3;
+                break;
+            case 3:
+                longToast("Check out your 'recent perusals' list then?");
+                mUsageState = 4;
+                break;
+            case 4:
+                longToast("Just keep on trying until you run out of cake");
+                mUsageState = 5;
+                break;
+            case 5:
+                longToast("Or until you actually have something to read..");
+                mUsageState = 1;
+            default:
+                break;
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d(TAG, "FRAGMENT onOptionsItemSelected");
@@ -91,9 +127,13 @@ public class PerusalEditTextFragment extends Fragment {
         int id = item.getItemId();
         if (id == R.id.action_example) {
 
-            if (mEditText != null)
-            {
+            if (mEditText != null) {
                 mText = mEditText.getText().toString();
+            }
+
+            if ( mText == null || mText.isEmpty() ) {
+                usage();
+                return true;
             }
 
 //            Toast.makeText(getActivity(), "Spritzing..", Toast.LENGTH_SHORT).show();

@@ -37,6 +37,8 @@ import com.spritzllc.api.common.model.Content;
 
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.datatype.Duration;
 
@@ -50,11 +52,11 @@ public class PerusalSpritzFragment
         implements
         SpritzSDK.LoginEventListener,
         SpritzSDK.LoginStatusChangeListener {
+
     /**
      * The fragment argument representing the section number for this
      * fragment.
      */
-
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static final String ARG_MODE = "section_number";
     private static final String ARG_SPRITZ_TEXT = "spritz_text";
@@ -75,16 +77,30 @@ public class PerusalSpritzFragment
 
     private boolean mShouldSavePerusal;
 
+    /// For the purpose of extracting the domain name ///
+    // http://www.mkyong.com/regular-expressions/domain-name-regular-expression-example/
+    private static final String DOMAIN_NAME_PATTERN = "^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}$";
+    private static Pattern pDomainNameOnly;
+    static {
+        pDomainNameOnly = Pattern.compile(DOMAIN_NAME_PATTERN);
+    }
+    public static boolean isValidDomainName(String domainName) {
+        return pDomainNameOnly.matcher(domainName).find();
+    }
+    public static String extractDomainName(String url) {
+        Matcher m = pDomainNameOnly.matcher("url");
+        if (m.find())
+            return m.group(1);
+        return "";
+    }
 
     /**
      * Returns a new instance of this fragment for the given section
      * number.
      */
-
     static private String TAG = "Spritz Fragment";
 
     private SQLiteDAO sqLiteDAO;
-
 
     public static PerusalSpritzFragment newInstance(int sectionNumber,
                                                     int mode,
@@ -206,42 +222,12 @@ public class PerusalSpritzFragment
         // create title from URL or first three words of the text
         int mode = getArguments().getInt(ARG_MODE);
         if (mode == Perusal.Mode.URL.ordinal()) {
-            String[] firstWords = text.split(".");
-
-            // must have found the part before the ".com"
-            // and after the ".com", essentially
-            if ( firstWords.length > 0 ){
-                title = firstWords[0];
-                firstWords = title.split(":");
-            }
-
-            // must be at least 2 parts: the "http(s)" part
-            // and the "//domainname" part
-            if (firstWords.length >= 2)
-            {
-                title = String.copyValueOf( firstWords[1].toCharArray(),
-                                            2, firstWords[1].length() );
-            }
-
-            if ( title.isEmpty() ) {
-                title = text; // just set the title to the URL it self..
-            }
-
+            title = makeTitleFromURL( text );
         } else if (mode == Perusal.Mode.TEXT.ordinal()) {
-            // create the title
-            String[] firstWords = text.split(" ");
-            Arrays.copyOfRange( firstWords, 0, 3 );
-            if ( firstWords.length > 0 )
-                title = Helpers.capitalize(firstWords[0]);
-            if ( firstWords.length > 1 )
-                title += " " + Helpers.capitalize(firstWords[1]);
-            if ( firstWords.length > 2 )
-                title += " " + Helpers.capitalize(firstWords[2]);
+            title = makeTitleFromText(text);
         }
 
-        Toast.makeText(getActivity().getBaseContext(), title + " added",
-                Toast.LENGTH_SHORT).show();
-
+        // create the perusal and add it to the database
         Perusal perusal = new Perusal();
         perusal.setTitle(title);
         perusal.setText(text);
@@ -249,16 +235,56 @@ public class PerusalSpritzFragment
         perusal.setModeInt(getArguments().getInt(ARG_MODE));
         perusal = dao.createPerusal( perusal );
 
-        /// Some Toasting
+        // if success then toast it's success!
         if (perusal != null) {
             Log.d(TAG, "success! added perusal to DB");
-//            Toast.makeText(getActivity().getBaseContext(), perusal.getTitle() + " added",
-//                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity().getBaseContext(), "'" + title + "' saved!",
+                    Toast.LENGTH_SHORT).show();
         } else {
             Log.d(TAG, "error.. couldnt add perusal to DB");
-            Toast.makeText(getActivity().getBaseContext(), perusal.getTitle()  + " was not added..",
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getActivity().getBaseContext(),  + " was not added..",
+//                    Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /// attempts to create a title from the give url string..
+    /// returns a string which might be the domain name of the url
+    public String makeTitleFromURL( String text ) {
+        String title = extractDomainName( text );
+
+        if ( !title.isEmpty() ) {
+            return title;
+        }
+
+        /// otherwise we need to come up with a way
+        /// of extracting some title from the url
+        String[] firstWords = text.split("//");
+
+        if ( firstWords.length >= 2 ) {
+            title = firstWords[1];
+        } else if ( firstWords.length == 1 ) {
+            title = firstWords[0];
+        } else {
+            title = text;
+        }
+
+        return title;
+    }
+
+    /// takes a string and attempts to extract the
+    /// first 3 words from it (returned and deliminated
+    /// by whitespaces)
+    public String makeTitleFromText( String text ) {
+        String[] firstWords = text.split(" ");
+        String title = "<Untitled>";
+        Arrays.copyOfRange( firstWords, 0, 3 );
+        if ( firstWords.length > 0 )
+            title = Helpers.capitalize(firstWords[0]);
+        if ( firstWords.length > 1 )
+            title += " " + Helpers.capitalize(firstWords[1]);
+        if ( firstWords.length > 2 )
+            title += " " + Helpers.capitalize(firstWords[2]);
+        return title;
     }
 
 
@@ -270,7 +296,6 @@ public class PerusalSpritzFragment
     }
 
     /// ---
-
 
     public boolean doSpritzing(String text) {
         boolean success = true;

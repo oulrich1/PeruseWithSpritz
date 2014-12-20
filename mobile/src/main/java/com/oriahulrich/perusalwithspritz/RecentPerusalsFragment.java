@@ -98,27 +98,25 @@ public class RecentPerusalsFragment extends ListFragment {
         Log.d(TAG, " onActivityCreated End " + recentPerusalsArrayList.size());
 
         final ListView listView = getListView();
-        recentPerusalsAdapter = new RecentPerusalsAdapter(getActivity(),
-                android.R.layout.simple_list_item_multiple_choice, recentPerusalsArrayList);
+        recentPerusalsAdapter = new RecentPerusalsAdapter( getActivity(),
+                android.R.layout.simple_list_item_multiple_choice,
+                recentPerusalsArrayList );
         listView.setAdapter(recentPerusalsAdapter);
-        registerForContextMenu(listView);
-        //        listView.setTextFilterEnabled(true);
 
-        // set up the event handlers ( see implementation below
-        setUpListViewItemClick( listView );
-//        setUpListViewItemLongHold( listView );
+        setUpListViewItemClickHandler( listView );
+
+        registerForContextMenu(listView);
     }
 
-    // sets up the click event handler for the items in the listview
-    private void setUpListViewItemClick( ListView listView ) {
+    private void setUpListViewItemClickHandler( ListView listView ) {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id)
             {
-                Log.d(TAG, "onItemClick");
-                Toast.makeText(getActivity(), "About to Spritz!",
-                        Toast.LENGTH_SHORT).show();
+                Log.d(TAG, " listview.onItemClick");
+//                Toast.makeText(getActivity(), "About to Spritz!",
+//                        Toast.LENGTH_SHORT).show();
                 // recentPerusalsAdapter.itemClickListener(view, position);
                 Perusal perusal = recentPerusalsAdapter.getItem(position);
 
@@ -136,22 +134,11 @@ public class RecentPerusalsFragment extends ListFragment {
         });
     }
 
-    // sets up the long hold event for the items in the listview
-    private void setUpListViewItemLongHold( ListView listView ) {
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
-                                           int pos, long id) {
-                // TODO Auto-generated method stub
-//                Toast.makeText(getActivity(), "Long hold item!", Toast.LENGTH_LONG).show();
 
-                return true;
-            }
-        });
-    }
-
-    /* created when we long hold a specific item in the recipe list */
+    /* created when we long hold a specific item in the 'recents' list */
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
         MenuInflater inflater = getActivity().getMenuInflater();
         inflater.inflate(R.menu.recent_perusals_fragment_context_menu, menu);
@@ -160,40 +147,60 @@ public class RecentPerusalsFragment extends ListFragment {
     /* When an item is selected in the context menu */
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-        AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        AdapterView.AdapterContextMenuInfo itemInfo
+                = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
 
-        if (!getUserVisibleHint())
+        if (!getUserVisibleHint()) {
             return false;
+        }
 
         Perusal recentPerusal = recentPerusalsAdapter.getItem(itemInfo.position);
         switch (item.getItemId()) {
-            case R.id.actionShareRecipeFavorite:
+            case R.id.actionSharePerusal:
                 try {
                     shareTextPerusal(itemInfo);
                 } catch (NullPointerException e) {
-                    Log.d(TAG, e.toString());
+                    Log.d(TAG, "action.sharePerusal " + e.toString());
                 }
                 return true;
-            case R.id.actionRemoveFavoriteRecipeFavorite:
-                try {
-                    if (recentPerusal == null) {
-                        Toast.makeText(getActivity(), "Tried to delete a non existant recipe, silly! ",
-                                Toast.LENGTH_SHORT).show();
-                    } else {
-                        recentPerusalsAdapter.remove(recentPerusal);
-                        sqLiteDAO.deletePerusal(recentPerusal);
-                        recentPerusalsAdapter.notifyDataSetChanged();
-                        Toast.makeText(getActivity(),
-                                "Removed '" + recentPerusal.getTitle() + "' from your favorites!  ",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                } catch (NullPointerException e) {
-                    Log.d(TAG, e.toString());
-                }
-                return true;
+            case R.id.actionRemovePerusal:
+                return removePerusal( recentPerusal );
+            case R.id.actionRenameTitle:
+                return showRenamePerusalDialog( recentPerusal );
             default:
                 return super.onContextItemSelected(item);
         }
+    }
+
+    private boolean removePerusal( Perusal perusal ) {
+        boolean isSuccess = true;
+        try {
+            if (perusal == null) {
+                Toast.makeText(getActivity(),
+                        "Tried to delete a non existent item!",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                recentPerusalsAdapter.remove(perusal);
+                sqLiteDAO.deletePerusal(perusal);
+                recentPerusalsAdapter.notifyDataSetChanged();
+                Toast.makeText(getActivity(),
+                        "Removed '" + perusal.getTitle() + "'!  ",
+                        Toast.LENGTH_SHORT).show();
+            }
+        } catch (NullPointerException e) {
+            Log.d(TAG, e.toString());
+            isSuccess = false;
+        }
+        return isSuccess;
+    }
+
+
+    private boolean showRenamePerusalDialog( Perusal perusal ) {
+        /* open a dialog that asks the user for a new name for this perusal */
+        Toast.makeText( getActivity(),
+                        "Not implemented yet!",
+                        Toast.LENGTH_SHORT).show();
+        return true; // hesitaantly
     }
 
 

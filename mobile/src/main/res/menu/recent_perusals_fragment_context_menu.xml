@@ -4,12 +4,17 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/actionShareRecipeFavorite"
+        android:id="@+id/actionRenameTitle"
+        android:title="@string/action_recent_perusal_rename_title"
+        android:showAsAction="always" />
+
+    <item
+        android:id="@+id/actionSharePerusal"
         android:title="@string/action_recent_perusal_share"
         android:showAsAction="always" />
 
     <item
-        android:id="@+id/actionRemoveFavoriteRecipeFavorite"
+        android:id="@+id/actionRemovePerusal"
         android:title="@string/action_recent_perusal_remove"
         android:visible="true"
         android:showAsAction="always" />

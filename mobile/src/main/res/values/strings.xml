@@ -9,8 +9,10 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="action_spritz_selection">Spritz This!</string>
     <string name="action_settings">Settings</string>
-    <string name="action_recent_perusal_remove">Remove Perusal</string>
-    <string name="action_recent_perusal_share">Share Perusal</string>
+    <string name="action_recent_perusal_rename_title">Rename</string>
+    <string name="action_recent_perusal_share">Share</string>
+    <string name="action_recent_perusal_remove">Delete</string>
+
     <string name="share_intent">Share recipe info to&#8230;</string>
 
 </resources>
