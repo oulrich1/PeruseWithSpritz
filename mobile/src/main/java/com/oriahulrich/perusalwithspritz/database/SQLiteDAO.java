@@ -71,8 +71,8 @@ public class SQLiteDAO {
         }
 
         // if the title isn't blank or a duplicate, insert it
-        ContentValues contentValues = new ContentValues();
-        contentValues.put( SQLiteDBHelper.COLUMN_TITLE, perusalTitle.toLowerCase().trim() );
+        ContentValues contentValues = new ContentValues(); // toLowerCase()
+        contentValues.put( SQLiteDBHelper.COLUMN_TITLE, perusalTitle.trim() );
         contentValues.put( SQLiteDBHelper.COLUMN_TEXT,  perusal.getText().toLowerCase().trim() );
         contentValues.put( SQLiteDBHelper.COLUMN_SPEED, perusal.getSpeed() );
         contentValues.put( SQLiteDBHelper.COLUMN_MODE, perusal.getMode().ordinal() );
@@ -84,7 +84,8 @@ public class SQLiteDAO {
         );
 
         if ( insertId < 0 ) {
-            Toast.makeText(context, "Failed to add perusal to DB: " + perusalTitle, Toast.LENGTH_SHORT).show();
+            Toast.makeText( context, "Failed to add perusal to DB: "
+                            + perusalTitle, Toast.LENGTH_SHORT).show();
             return perusal;
         }
 

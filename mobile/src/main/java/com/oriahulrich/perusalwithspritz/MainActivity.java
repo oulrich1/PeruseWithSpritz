@@ -176,6 +176,9 @@ public class MainActivity extends Activity
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
             Log.d(TAG, "handleSendImage Intent Receive Not Implemented");
+            Toast.makeText( this,
+                            "Spritzing an image is not supported, yet. Really.",
+                            Toast.LENGTH_LONG).show();
             // Update UI to reflect image being shared
         }
     }

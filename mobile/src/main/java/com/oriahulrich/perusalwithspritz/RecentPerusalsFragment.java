@@ -5,8 +5,12 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.ListFragment;
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,6 +27,7 @@ import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by oriahulrich on 12/18/14.
@@ -96,8 +101,16 @@ public class RecentPerusalsFragment extends ListFragment {
         recentPerusalsAdapter = new RecentPerusalsAdapter(getActivity(),
                 android.R.layout.simple_list_item_multiple_choice, recentPerusalsArrayList);
         listView.setAdapter(recentPerusalsAdapter);
-//        listView.setTextFilterEnabled(true);
+        registerForContextMenu(listView);
+        //        listView.setTextFilterEnabled(true);
 
+        // set up the event handlers ( see implementation below
+        setUpListViewItemClick( listView );
+//        setUpListViewItemLongHold( listView );
+    }
+
+    // sets up the click event handler for the items in the listview
+    private void setUpListViewItemClick( ListView listView ) {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
@@ -106,13 +119,13 @@ public class RecentPerusalsFragment extends ListFragment {
                 Log.d(TAG, "onItemClick");
                 Toast.makeText(getActivity(), "About to Spritz!",
                         Toast.LENGTH_SHORT).show();
-//                recentPerusalsAdapter.itemClickListener(view, position);
+                // recentPerusalsAdapter.itemClickListener(view, position);
                 Perusal perusal = recentPerusalsAdapter.getItem(position);
 
                 Fragment fragment = PerusalSpritzFragment
                         .newInstance( position + 1,
-                                      perusal.getMode().ordinal(),
-                                      perusal.getText(), false );
+                                perusal.getMode().ordinal(),
+                                perusal.getText(), false );
 
                 // update the main content by replacing fragments
                 FragmentManager fragmentManager = getFragmentManager();
@@ -121,7 +134,108 @@ public class RecentPerusalsFragment extends ListFragment {
                         .commit();
             }
         });
+    }
 
+    // sets up the long hold event for the items in the listview
+    private void setUpListViewItemLongHold( ListView listView ) {
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+                                           int pos, long id) {
+                // TODO Auto-generated method stub
+//                Toast.makeText(getActivity(), "Long hold item!", Toast.LENGTH_LONG).show();
+
+                return true;
+            }
+        });
+    }
+
+    /* created when we long hold a specific item in the recipe list */
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getActivity().getMenuInflater();
+        inflater.inflate(R.menu.recent_perusals_fragment_context_menu, menu);
+    }
+
+    /* When an item is selected in the context menu */
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        if (!getUserVisibleHint())
+            return false;
+
+        Perusal recentPerusal = recentPerusalsAdapter.getItem(itemInfo.position);
+        switch (item.getItemId()) {
+            case R.id.actionShareRecipeFavorite:
+                try {
+                    shareTextPerusal(itemInfo);
+                } catch (NullPointerException e) {
+                    Log.d(TAG, e.toString());
+                }
+                return true;
+            case R.id.actionRemoveFavoriteRecipeFavorite:
+                try {
+                    if (recentPerusal == null) {
+                        Toast.makeText(getActivity(), "Tried to delete a non existant recipe, silly! ",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        recentPerusalsAdapter.remove(recentPerusal);
+                        sqLiteDAO.deletePerusal(recentPerusal);
+                        recentPerusalsAdapter.notifyDataSetChanged();
+                        Toast.makeText(getActivity(),
+                                "Removed '" + recentPerusal.getTitle() + "' from your favorites!  ",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                } catch (NullPointerException e) {
+                    Log.d(TAG, e.toString());
+                }
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+
+    private void shareTextPerusal(AdapterView.AdapterContextMenuInfo itemInfo) {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+
+        Perusal perusal = recentPerusalsAdapter.getItem(itemInfo.position);
+
+        String textMessage = perusal.getText();
+        String subjectMessage = "Perusal: " + perusal.getTitle() + "!";
+
+        try {
+            List<ResolveInfo> resolveInfoList = getActivity().getPackageManager()
+                    .queryIntentActivities(shareIntent, 0);
+
+            if (!resolveInfoList.isEmpty()) {
+                List<Intent> targetedShareIntents = new ArrayList<Intent>();
+                Intent targetedShareIntent;
+
+                for (ResolveInfo resolveInfo : resolveInfoList) {
+                    String packageName = resolveInfo.activityInfo.packageName;
+
+                    targetedShareIntent = new Intent(Intent.ACTION_SEND);
+                    targetedShareIntent.setType("text/plain");
+                    targetedShareIntent.putExtra(Intent.EXTRA_SUBJECT, subjectMessage);
+                    targetedShareIntent.putExtra(Intent.EXTRA_TEXT, textMessage);
+                    targetedShareIntent.setPackage(packageName);
+
+                    targetedShareIntents.add(targetedShareIntent);
+                }
+
+                Intent chooserIntent = Intent.createChooser(targetedShareIntents.remove(0),
+                        getResources().getString(R.string.share_intent));
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                        targetedShareIntents.toArray(new Parcelable[] {}));
+                startActivityForResult(chooserIntent, 0);
+            }
+        } catch (NullPointerException e) {
+            Log.d(TAG, "Exception: " + e.getMessage());
+        }
     }
 
     @Override

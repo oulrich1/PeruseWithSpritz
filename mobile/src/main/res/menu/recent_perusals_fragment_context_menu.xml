@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/actionShareRecipeFavorite"
+        android:title="@string/action_recent_perusal_share"
+        android:showAsAction="always" />
+
+    <item
+        android:id="@+id/actionRemoveFavoriteRecipeFavorite"
+        android:title="@string/action_recent_perusal_remove"
+        android:visible="true"
+        android:showAsAction="always" />
+
+</menu>

@@ -94,10 +94,10 @@ public class PerusalSpritzFragment
         Log.d(TAG, "FRAGMENT newInstance");
 
         Bundle args = new Bundle();
-        args.putBoolean(ARG_SHOULD_SAVE, shouldSavePerusal);
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-        args.putInt(ARG_MODE, mode);
-        args.putString(ARG_SPRITZ_TEXT, textSpritz);
+        args.putInt(ARG_MODE, mode);                         // URL or TEXT
+        args.putString(ARG_SPRITZ_TEXT, textSpritz);         // url or text
+        args.putBoolean(ARG_SHOULD_SAVE, shouldSavePerusal); // should save new perusal if not already
 
         PerusalSpritzFragment fragment = new PerusalSpritzFragment();
         fragment.setArguments(args);
@@ -136,7 +136,6 @@ public class PerusalSpritzFragment
 //            updateSpritzSpeed(mSpritzView); // from shared preferences
 //        }
 
-
         return rootView;
     }
 
@@ -157,7 +156,10 @@ public class PerusalSpritzFragment
 
     @Override
     public void onDestroy() {
-        if (mSpritzView != null && mSpritzView.getSpeed() != getSharedPrefs().getInt(PREF_SPEED, -1)) {
+        if ( mSpritzView != null
+             && mSpritzView.getSpeed()
+             != getSharedPrefs().getInt(PREF_SPEED, -1))
+        {
             SharedPreferences.Editor editor = getSharedPrefs().edit();
             editor.putInt(PREF_SPEED, mSpritzView.getSpeed());
             editor.apply(); // (async) vs commit() (syncronous)
@@ -196,18 +198,46 @@ public class PerusalSpritzFragment
     }
 
     /* Creates a peruse object from just text and stores it in the DB */
-    private void createAddPerusalToDB( SQLiteDAO dao, String text ) {
-
-        // create the title
-        String[] firstWords = text.split(" ");
-        Arrays.copyOfRange( firstWords, 0, 3 );
+    // dao is the data storage db. @param text can be the url or the raw text
+    private void createAddPerusalToDB( SQLiteDAO dao, String text )
+    {
         String title = "<No title>";
-        if ( firstWords.length > 0 )
-            title = Helpers.capitalize(firstWords[0]);
-        if ( firstWords.length > 1 )
-            title += " " + Helpers.capitalize(firstWords[1]);
-        if ( firstWords.length > 2 )
-            title += " " + Helpers.capitalize(firstWords[2]);
+
+        // create title from URL or first three words of the text
+        int mode = getArguments().getInt(ARG_MODE);
+        if (mode == Perusal.Mode.URL.ordinal()) {
+            String[] firstWords = text.split(".");
+
+            // must have found the part before the ".com"
+            // and after the ".com", essentially
+            if ( firstWords.length > 0 ){
+                title = firstWords[0];
+                firstWords = title.split(":");
+            }
+
+            // must be at least 2 parts: the "http(s)" part
+            // and the "//domainname" part
+            if (firstWords.length >= 2)
+            {
+                title = String.copyValueOf( firstWords[1].toCharArray(),
+                                            2, firstWords[1].length() );
+            }
+
+            if ( title.isEmpty() ) {
+                title = text; // just set the title to the URL it self..
+            }
+
+        } else if (mode == Perusal.Mode.TEXT.ordinal()) {
+            // create the title
+            String[] firstWords = text.split(" ");
+            Arrays.copyOfRange( firstWords, 0, 3 );
+            if ( firstWords.length > 0 )
+                title = Helpers.capitalize(firstWords[0]);
+            if ( firstWords.length > 1 )
+                title += " " + Helpers.capitalize(firstWords[1]);
+            if ( firstWords.length > 2 )
+                title += " " + Helpers.capitalize(firstWords[2]);
+        }
 
         Toast.makeText(getActivity().getBaseContext(), title + " added",
                 Toast.LENGTH_SHORT).show();
@@ -234,7 +264,8 @@ public class PerusalSpritzFragment
 
     private SharedPreferences getSharedPrefs() {
         if (mSharedPrefs == null)
-            mSharedPrefs = getActivity().getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+            mSharedPrefs = getActivity()
+                    .getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         return mSharedPrefs;
     }
 
@@ -278,9 +309,13 @@ public class PerusalSpritzFragment
     }
 
     private SpritzBaseView setupSpritzView(LayoutInflater inflater, View rootView) {
-        mFrameLayoutSpritzContainer = (FrameLayout) rootView.findViewById(R.id.frameLayoutSpritzContainer); // destination view
+        mFrameLayoutSpritzContainer
+                = (FrameLayout) rootView.findViewById(R.id.frameLayoutSpritzContainer);
+                // destination view
 
-        inflater.inflate(R.layout.fragment_spritz_full, mFrameLayoutSpritzContainer, true);  // append source view to dst
+        inflater.inflate(R.layout.fragment_spritz_full,
+                mFrameLayoutSpritzContainer, true);
+                // append source view to dst
 
         mSpritzView = (SpritzBaseView) rootView.findViewById(R.id.spritzView);
 
