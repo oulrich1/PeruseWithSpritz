@@ -117,7 +117,10 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.d( TAG, "Finished determining state: " + mTextInputState + " " + mText + " " + mURL );
+        Log.d( TAG, "Finished determining state: "
+                    + mTextInputState + " "
+                    + mText + " "
+                    + mURL );
 
         // set up the navbar
         mNavigationDrawerFragment = (NavigationDrawerFragment)
@@ -138,7 +141,6 @@ public class MainActivity extends Activity
             );
             Log.d(TAG, "Spritz successfully initialized..");
         } catch ( Exception e ) {
-//            Toast.makeText(this, "Spritz failed to contact server, falling back 20 years..", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Spritz failed to init..");
         }
     }
@@ -270,6 +272,7 @@ public class MainActivity extends Activity
         else if ( mTextInputState == TextInputState.IMAGE_OCR_SHARE )
         {
             // true when we need to go straight to the spritzing screen
+            // false when we want to show the user the text first before spritzing
             boolean isForceLoadSpritz = false;
 
             if ( mOcrEnabled )
@@ -277,7 +280,7 @@ public class MainActivity extends Activity
                 Log.d(TAG, "OCR and then run editText fragment on text");
                 // have URI of image, need to OCR
                 Toast.makeText( this,
-                        "..please wait a moment.. extracing text from the pixels",
+                        "..please wait a moment.. extracting text from the pixels",
                         Toast.LENGTH_LONG).show();
 
                 // Text Recognition
@@ -343,12 +346,15 @@ public class MainActivity extends Activity
         // perform text recognition on the image URI saved onactivityresult
         Ocr ocr = new Ocr();
         ocr.setImage( imageUri );
+
+        Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
         Ocr.Result result = ocr.performOcr();
         if ( !result.isValid ) {
             Toast.makeText(this, "Ocr Failed", Toast.LENGTH_LONG).show();
             return;
         }
         mText = result.text;
+        Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
 
         ///  - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // then populate the edit text fragment with the text
@@ -372,7 +378,8 @@ public class MainActivity extends Activity
         Log.d(TAG, " Received activity result ");
 
         if ( mImageUri == null ) {
-            Log.d(TAG, "on activity result image uri is null. this is not possible in this method..");
+            Log.d(TAG, "on activity result image uri is null."
+                        + "this is not possible in this method..");
             return;
         }
 
@@ -390,11 +397,8 @@ public class MainActivity extends Activity
     private boolean dispatchTakePictureIntent() {
         ///  - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // create Intent to take a picture and return control to the calling application
-        /// TODO: remove toasts from this method.. only for debug purposes anyways
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            Toast.makeText(this, "About to open existing camera app!", Toast.LENGTH_SHORT).show();
-
             File photoFile = null;
             try {
                 photoFile = Helpers.createUniqueImageFile();
@@ -430,7 +434,6 @@ public class MainActivity extends Activity
         }
 
         Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. " );
-        Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
 
         // create picture file and take picture
         // when the picture is finished the rest of
@@ -469,6 +472,7 @@ public class MainActivity extends Activity
     }
 
 
+    /// AKA the action bar buttons and actions
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d(TAG, "ACTIVITY onCreateOptionsMenu");
@@ -491,7 +495,15 @@ public class MainActivity extends Activity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//        else
+        if (id == R.id.action_about) {
+            FragmentManager fragmentManager = this.getFragmentManager();
+            DialogAboutFragment dialogAboutFragment
+                    = new DialogAboutFragment();
+            dialogAboutFragment.show(fragmentManager, "dialog about fragment");
             return true;
         }
         return super.onOptionsItemSelected(item);
