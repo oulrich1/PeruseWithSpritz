@@ -31,10 +31,12 @@ public class PerusalEditTextFragment extends Fragment {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private static final String ARG_FORCE_SPRITZ = "force_spritz_boolean";
     private static final String ARG_TEXT = "arg_text";
 
     private String mText;           // text, which could be initialized with share via feature
     private EditText mEditText;     // the editable text view which will update mText, when necessary
+    private boolean mForceLoadSpritz;
 
     private int mUsageState; // for fun (what usage message shall we show?!)
 
@@ -45,10 +47,14 @@ public class PerusalEditTextFragment extends Fragment {
 
     static private String TAG = "Edit Text Fragment";
 
-    public static PerusalEditTextFragment newInstance(int sectionNumber, String text) {
+    public static PerusalEditTextFragment newInstance(int sectionNumber,
+                                                      String text,
+                                                      boolean isForceLoadSpritz)
+    {
         Log.d(TAG, " newInstance");
         PerusalEditTextFragment fragment = new PerusalEditTextFragment();
         Bundle args = new Bundle();
+        args.putBoolean(ARG_FORCE_SPRITZ, isForceLoadSpritz); // this is simply a hack for now
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         args.putString(ARG_TEXT, text);
         fragment.setArguments(args);
@@ -68,8 +74,18 @@ public class PerusalEditTextFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_edit_text, container, false);
         setHasOptionsMenu(true);
 
-        mText = getArguments().getString(ARG_TEXT);
         mEditText = (EditText) rootView.findViewById(R.id.editTextPerusal);
+
+        // check if url nad need to help spritz run
+        mForceLoadSpritz = getArguments().getBoolean(ARG_FORCE_SPRITZ);
+        if ( mForceLoadSpritz ) {
+            Log.d(TAG, " ..onCreateView Still.. but forcing navigation to spritz.. assuming text is URL");
+            int textState = Perusal.Mode.URL.ordinal();
+            navigateToSpritzFragment(textState, mText);
+            return rootView;
+        }
+
+        mText = getArguments().getString(ARG_TEXT);
 
         if ( mText != null && !mText.isEmpty() ) {
             mEditText.setText(mText);
@@ -136,20 +152,23 @@ public class PerusalEditTextFragment extends Fragment {
                 return true;
             }
 
-//            Toast.makeText(getActivity(), "Spritzing..", Toast.LENGTH_SHORT).show();
             int textState = Perusal.Mode.TEXT.ordinal();
-            int peruseSectionNumber = 1;
-            Fragment fragment = PerusalSpritzFragment
-                    .newInstance(peruseSectionNumber, textState, mText, true);
-
-            FragmentManager fragmentManager = getFragmentManager();
-            fragmentManager.beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .commit();
+            navigateToSpritzFragment(textState, mText);
 
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void navigateToSpritzFragment(int textState, String msg) {
+        int peruseSectionNumber = 1; // force section nav number
+        Fragment fragment = PerusalSpritzFragment
+                .newInstance(peruseSectionNumber, textState, msg, true);
+
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
     }
 
     @Override

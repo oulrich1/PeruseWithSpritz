@@ -110,10 +110,10 @@ public class PerusalSpritzFragment
         Log.d(TAG, "FRAGMENT newInstance");
 
         Bundle args = new Bundle();
-        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-        args.putInt(ARG_MODE, mode);                         // URL or TEXT
-        args.putString(ARG_SPRITZ_TEXT, textSpritz);         // url or text
         args.putBoolean(ARG_SHOULD_SAVE, shouldSavePerusal); // should save new perusal if not already
+        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
+        args.putString(ARG_SPRITZ_TEXT, textSpritz);         // url or text
+        args.putInt(ARG_MODE, mode);                         // URL or TEXT
 
         PerusalSpritzFragment fragment = new PerusalSpritzFragment();
         fragment.setArguments(args);
@@ -205,7 +205,7 @@ public class PerusalSpritzFragment
         SpritzSDK.getInstance().addLoginStatusChangeListener(this);
 
         if (mTextSpritz != null && !mTextSpritz.isEmpty()) {
-            doSpritzing(mTextSpritz);
+            doSpritzing( mTextSpritz );
             mShouldSavePerusal = getArguments().getBoolean(ARG_SHOULD_SAVE);
             if ( mShouldSavePerusal ) {
                 createAddPerusalToDB(sqLiteDAO, mTextSpritz);
@@ -323,6 +323,7 @@ public class PerusalSpritzFragment
                 source = new SimpleSpritzSource( sampleMessage, new Locale("en", "US") );
             }
 
+            mSpritzView.rewind();
             mSpritzView.start(source);
 
         } catch (Exception e) {

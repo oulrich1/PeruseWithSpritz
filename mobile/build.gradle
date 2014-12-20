@@ -4,12 +4,6 @@ android {
     compileSdkVersion 21
     buildToolsVersion "20.0.0"
 
-    packagingOptions {
-        exclude 'META-INF/LICENSE'
-        exclude 'META-INF/NOTICE'
-        exclude 'META-INF/LICENSE.txt'
-        exclude 'META-INF/NOTICE.txt'
-    }
 
     defaultConfig {
         applicationId "com.oriahulrich.perusalwithspritz"
@@ -17,13 +11,81 @@ android {
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
+        ndk {
+            moduleName "TessWrapperNDKModule"
+//            stl "stllibrary" ie stlport_static
+//            ldLibs "the libs", ""
+//            cFlags ..
+//            cFlags "-DANDROID_NDK -D_DEBUG DNULL=0"   // Define some macros
+//            ldLibs "EGL", "GLESv3", "dl", "log"       // Link with these libraries!
+//            stl "stlport_shared"                      // Use shared stlport library
+        }
     }
+
+    defaultConfig.versionCode = 123
+
+    flavorGroups "abi"
+
+    productFlavors {
+        x86 {
+            flavorGroup "abi"
+            versionCode Integer.parseInt("6" + defaultConfig.versionCode)
+            ndk{
+                abiFilter "x86"
+//                cFlags .. "specific c flags"
+            }
+            // this is the flavor part of the version code.
+            // It must be higher than the arm one for devices supporting
+            // both, as x86 is preferred.
+            versionCode = 3
+        }
+        arm {
+            flavorGroup "abi"
+            ndk{
+                abiFilter "armeabi-v7a"
+            }
+            versionCode = 2
+        }
+        mips {
+            flavorGroup "abi"
+            ndk{
+                abiFilter "mips"
+            }
+            versionCode = 1
+        }
+        fat {
+            flavorGroup "abi"
+            // fat binary, lowest version code to be
+            // the last option
+            versionCode = 0
+        }
+    }
+
+
+    // make per-variant version code
+    applicationVariants.all { variant ->
+        // get the version code of each flavor
+        def abiVersion = variant.productFlavors.get(0).versionCode
+
+        // set the composite code
+        variant.mergedFlavor.versionCode = abiVersion * 100000 + defaultConfig.versionCode
+    }
+
+
     buildTypes {
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+    }
+
 }
 
 

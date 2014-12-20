@@ -6,39 +6,31 @@ import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
 
 // library includes
-import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
-import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 import com.spritzinc.android.sdk.SpritzSDK;
 
 // local project includes
-import com.oriahulrich.perusalwithspritz.Helpers;
-import com.oriahulrich.perusalwithspritz.PerusalSelectionFragment;
-import com.oriahulrich.perusalwithspritz.PerusalEditTextFragment;
-import com.oriahulrich.perusalwithspritz.PerusalSpritzFragment;
+import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 
 
 public class MainActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+
+    // Load Important Libraries
+    static {
+        System.loadLibrary("TessWrapperNDKModule");
+    }
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -74,6 +66,7 @@ public class MainActivity extends Activity
         return sqLiteDAO;
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "ACTIVITY onCreate");
@@ -82,17 +75,7 @@ public class MainActivity extends Activity
         sqLiteDAO = new SQLiteDAO(this);
         sqLiteDAO.open();
 
-        // init spritz first
-        try {
-            SpritzSDK.init(this,
-                    "a54c147382cb5ce21",
-                    "fa4157e0-b591-4183-a6fc-78f21a692dbf",
-                    "https://sdk.spritzinc.com/android/examples/login_success.html"
-            );
-        } catch ( Exception e ) {
-//            Toast.makeText(this, "Spritz failed to contact server, falling back 20 years..", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Spritz failed to init..");
-        }
+        Log.d(TAG, " Native string: " + getStringFromNative());
 
         // Get intent with the text: (1) raw text, (2) url, (3) image (TODO)
         Intent intent = getIntent();
@@ -129,6 +112,19 @@ public class MainActivity extends Activity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+
+        // init spritz first
+        try {
+            SpritzSDK.init(this,
+                    "a54c147382cb5ce21",
+                    "fa4157e0-b591-4183-a6fc-78f21a692dbf",
+                    "https://sdk.spritzinc.com/android/examples/login_success.html"
+            );
+            Log.d(TAG, "Spritz successfully initialized..");
+        } catch ( Exception e ) {
+//            Toast.makeText(this, "Spritz failed to contact server, falling back 20 years..", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Spritz failed to init..");
+        }
     }
 
     void handleDefaultIntent(Intent intent)
@@ -230,17 +226,23 @@ public class MainActivity extends Activity
         }
         else if (mTextInputState == TextInputState.URL_SPRITZ)
         {
-            fragment = PerusalSpritzFragment
-                        .newInstance( position + 1,
-                                      Perusal.Mode.URL.ordinal(),
-                                      mURL,
-                                      true );
+            // TODO: figure out why spritz does not load when is first fragment to load
+//            fragment = PerusalSpritzFragment
+//                        .newInstance( position + 1,
+//                                      Perusal.Mode.URL.ordinal(),
+//                                      mURL,
+//                                      true );
+
+            // falling back to going through the edit text fragment for no
+            // readon other than to make spritz work on the case a url is shared
+            fragment = PerusalEditTextFragment.newInstance(position + 1, mText, true);
+
             Log.d(TAG, "Spritz Direct URL SELECTION");
         }
         else
         {
             Log.d(TAG, "EditText Fragment");
-            fragment = PerusalEditTextFragment.newInstance(position + 1, mText);
+            fragment = PerusalEditTextFragment.newInstance(position + 1, mText, false);
         }
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getFragmentManager();
@@ -334,5 +336,6 @@ public class MainActivity extends Activity
     }
 
 
+    public native String getStringFromNative();
 
 }
