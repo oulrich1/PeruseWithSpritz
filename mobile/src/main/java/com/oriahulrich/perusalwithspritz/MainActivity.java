@@ -9,12 +9,17 @@ import android.app.FragmentManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 
 // library includes
@@ -22,6 +27,7 @@ import com.spritzinc.android.sdk.SpritzSDK;
 
 // local project includes
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
+import com.oriahulrich.perusalwithspritz.lib.Ocr;
 
 
 public class MainActivity extends Activity
@@ -51,7 +57,8 @@ public class MainActivity extends Activity
     public enum TextInputState {
         URL_WEB_VIEW,
         TEXT_EDIT,
-        URL_SPRITZ
+        URL_SPRITZ,
+        IMAGE_OCR_SHARE,
     }
 
     // argument to the webview fragment
@@ -59,6 +66,13 @@ public class MainActivity extends Activity
 
     // argument to the edit text fragment
     private String mText;
+
+    // argument to the ocr tool for processing
+    // then when its finished
+    private boolean mOcrEnabled;
+    private Uri mImageUri;
+    private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
+    private Uri fileUri;
 
     private TextInputState mTextInputState;
 
@@ -70,6 +84,8 @@ public class MainActivity extends Activity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "ACTIVITY onCreate");
+
+        mOcrEnabled = Helpers.checkCameraHardware(this);
 
         // initialize one and only DAO
         sqLiteDAO = new SQLiteDAO(this);
@@ -127,19 +143,6 @@ public class MainActivity extends Activity
         }
     }
 
-    void handleDefaultIntent(Intent intent)
-    {
-        if( Intent.ACTION_MAIN == intent.getAction() )
-        {
-            Log.d(TAG,  "handleDefaultIntent: Action Main action is invoked.. " +
-                        "will open up text edit fragment");
-        }
-
-        mText = "";
-        mTextInputState = TextInputState.TEXT_EDIT;
-//        doSelectDrawerItem( NavigationDrawerFragment.Position.PERUSAL.ordinal() );
-    }
-
     /** TODO */
     /* Expect the text to be a URL String */
     void handleSendText(Intent intent) {
@@ -171,11 +174,11 @@ public class MainActivity extends Activity
         Log.d(TAG, "ACTIVITY handleSendImage");
         Uri imageUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (imageUri != null) {
-            Log.d(TAG, "handleSendImage Intent Receive Not Implemented");
-            Toast.makeText( this,
-                            "Spritzing an image is not supported, yet. Really.",
-                            Toast.LENGTH_LONG).show();
+            Log.d(TAG, "handleSendImage.. got the image");
+
             // Update UI to reflect image being shared
+            mImageUri = imageUri;
+            mTextInputState = TextInputState.IMAGE_OCR_SHARE;
         }
     }
 
@@ -186,9 +189,26 @@ public class MainActivity extends Activity
         ArrayList<Uri> imageUris = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
         if (imageUris != null) {
             Log.d(TAG, "handleSendMultipleImages Intent Receive Not Implemented");
+            Toast.makeText( this,
+                    "Spritzing multiple images is not supported, sorry..",
+                    Toast.LENGTH_LONG).show();
             // Update UI to reflect multiple images being shared
         }
     }
+
+    void handleDefaultIntent(Intent intent)
+    {
+        if( Intent.ACTION_MAIN == intent.getAction() )
+        {
+            Log.d(TAG,  "handleDefaultIntent: Action Main action is invoked.. " +
+                    "will open up text edit fragment");
+        }
+
+        mText = "";
+        mTextInputState = TextInputState.TEXT_EDIT;
+//        doSelectDrawerItem( NavigationDrawerFragment.Position.PERUSAL.ordinal() );
+    }
+
 
     @Override
     /* on the event we select a drawer item */
@@ -201,12 +221,17 @@ public class MainActivity extends Activity
         switch (position)
         {
             case 0:
+                // handles spritzing raw text or URL, if special case:
+                // then handle that within spritzing fragment
                 doSelectPerusalDetermineSpritzingFragment(position);
                 break;
             case 1:
                 doSelectRecentListFragment(position);
                 break;
             case 2:
+                // then open camera intent, get image..
+                // on return from camera, ask OCR to recognize
+                // the text and then spritz
                 doSelectOcrFragment(position);
                 break;
         }
@@ -221,6 +246,7 @@ public class MainActivity extends Activity
         Fragment fragment;
         if (mTextInputState == TextInputState.URL_WEB_VIEW)
         {
+            /// THIS SHOULD NOT GET CALLED FOR NOW..
             fragment = PerusalSelectionFragment.newInstance(position + 1, mURL);
             Log.d(TAG, "Selection Fragment");
         }
@@ -234,22 +260,64 @@ public class MainActivity extends Activity
 //                                      true );
 
             // falling back to going through the edit text fragment for no
-            // readon other than to make spritz work on the case a url is shared
-            fragment = PerusalEditTextFragment.newInstance(position + 1, mText, true);
+            // reason other than to make spritz work on the case a url is shared
+            boolean isForceLoadSpritz = true;
+            fragment = PerusalEditTextFragment
+                    .newInstance(position + 1, mText, isForceLoadSpritz);
 
             Log.d(TAG, "Spritz Direct URL SELECTION");
         }
-        else
+        else if ( mTextInputState == TextInputState.IMAGE_OCR_SHARE )
         {
-            Log.d(TAG, "EditText Fragment");
-            fragment = PerusalEditTextFragment.newInstance(position + 1, mText, false);
+            // true when we need to go straight to the spritzing screen
+            boolean isForceLoadSpritz = false;
+
+            if ( mOcrEnabled )
+            {
+                Log.d(TAG, "OCR and then run editText fragment on text");
+                // have URI of image, need to OCR
+                Toast.makeText( this,
+                        "..please wait a moment.. extracing text from the pixels",
+                        Toast.LENGTH_LONG).show();
+
+                // Text Recognition
+                Ocr ocr = new Ocr();
+                ocr.setImage( mImageUri );
+                Ocr.Result result = ocr.performOcr();
+                mText = result.text;
+
+                if ( result.isValid ) {
+                    // then we can safely assume that OCR was
+                    // mostly a success and we can spritz the text
+                    isForceLoadSpritz = false;
+                }
+            }
+            else {
+                Toast.makeText( this,
+                                "Camera was not detected.. will not OCR..",
+                                Toast.LENGTH_SHORT).show();
+                mText = "";
+            }
+
+            // then populate the edit text fragment with the text
+            // and let the user press the "Spritz" action in the action bar
+            fragment = PerusalEditTextFragment
+                    .newInstance(position + 1, mText, isForceLoadSpritz);
         }
+        else // if ( mTextInputState == TextInputState.TEXT_EDIT )
+        {   // should happen in any other case anyways..
+            Log.d(TAG, "EditText Fragment");
+            fragment = PerusalEditTextFragment
+                    .newInstance(position + 1, mText, false);
+        }
+
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)
                 .commit();
     }
+
 
     public void doSelectRecentListFragment(int position)
     {
@@ -265,19 +333,111 @@ public class MainActivity extends Activity
                 .commit();
     }
 
+
+    public void doOcrAndSpritz( Uri imageUri ) {
+
+        if ( imageUri == null ){
+            return;
+        }
+
+        // perform text recognition on the image URI saved onactivityresult
+        Ocr ocr = new Ocr();
+        ocr.setImage( imageUri );
+        Ocr.Result result = ocr.performOcr();
+        if ( !result.isValid ) {
+            Toast.makeText(this, "Ocr Failed", Toast.LENGTH_LONG).show();
+            return;
+        }
+        mText = result.text;
+
+        ///  - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // then populate the edit text fragment with the text
+        // and let the user press the "Spritz" action in the action bar
+        int position = 3;
+        boolean isForceLoadSpritz = false;
+        Fragment fragment = PerusalEditTextFragment
+                .newInstance(position, mText, isForceLoadSpritz);
+
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG, " Received activity result ");
+
+        if ( mImageUri == null ) {
+            Log.d(TAG, "on activity result image uri is null. this is not possible in this method..");
+            return;
+        }
+
+        if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Helpers.globalAppsMediaScanIntent( this, mImageUri.getPath() );
+                doOcrAndSpritz( mImageUri );
+            } else if (resultCode == RESULT_CANCELED) {
+            } else {
+            }
+        }
+    }
+
+
+    private boolean dispatchTakePictureIntent() {
+        ///  - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // create Intent to take a picture and return control to the calling application
+        /// TODO: remove toasts from this method.. only for debug purposes anyways
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            Toast.makeText(this, "About to open existing camera app!", Toast.LENGTH_SHORT).show();
+
+            File photoFile = null;
+            try {
+                photoFile = Helpers.createUniqueImageFile();
+            } catch (IOException e) {
+                Log.d(TAG, "image file exception.. " + e.getMessage());
+                photoFile = null;
+            }
+
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                mImageUri = Uri.fromFile(photoFile);
+                takePictureIntent.putExtra( MediaStore.EXTRA_OUTPUT, mImageUri );
+                startActivityForResult(takePictureIntent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+            } else {
+                mImageUri = null;
+                return false;
+            }
+
+        } else {
+            Toast.makeText(this, "Camera not detected..", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
+        return true;
+    }
+
+
     public void doSelectOcrFragment(int position)
     {
-        Log.d(TAG, " OCR Fragment navigation and frag itself NOT IMPLEMENTED YET");
-        Toast.makeText(this, "Not implemented yet!", Toast.LENGTH_SHORT).show();
+        if (!mOcrEnabled) {
+            Toast.makeText(this, "Camera not detected..", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-//        Fragment fragment = RecentPerusalsFragment.newInstance(position + 1);
-//
-//        // update the main content by replacing fragments
-//        FragmentManager fragmentManager = getFragmentManager();
-//        fragmentManager.beginTransaction()
-//                .replace(R.id.container, fragment)
-//                .commit();
+        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. " );
+        Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
+
+        // create picture file and take picture
+        // when the picture is finished the rest of
+        // the ocr/spritzing logic is handled..
+        dispatchTakePictureIntent();
     }
+
 
     public void onSectionAttached(int number) {
         Log.d(TAG, "ACTIVITY onSectionAttached");
@@ -286,7 +446,7 @@ public class MainActivity extends Activity
                 mTitle  = getString(R.string.title_section1);
                 break;
             case 2:
-//                mTitle = getString(R.string.title_section2);
+                // mTitle = getString(R.string.title_section2);
                 mTitle = "Recent Perusals";
                 break;
             case 3:
@@ -294,6 +454,7 @@ public class MainActivity extends Activity
                 break;
         }
     }
+
 
     public void restoreActionBar() {
         Log.d(TAG, "ACTIVITY restoreActionBar");
@@ -321,6 +482,7 @@ public class MainActivity extends Activity
         }
         return super.onCreateOptionsMenu(menu);
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
