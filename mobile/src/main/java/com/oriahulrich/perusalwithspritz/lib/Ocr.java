@@ -37,6 +37,10 @@ public class Ocr {
         }
     }
 
+    static {
+        System.loadLibrary("lept");
+        System.loadLibrary("tess");
+    }
 
     public static final String TAG = "Ocr";
 
@@ -66,6 +70,9 @@ public class Ocr {
     public boolean setImage(Bitmap image)  {
         mImageBitmap = image;
         return true;
+    }
+    public Bitmap getImage()  {
+        return mImageBitmap;
     }
     public String performOcrGetText() {
         Result result = performOcr();
@@ -103,7 +110,9 @@ public class Ocr {
             Log.d(TAG, "Tesseract Exception: " + e.getMessage());
             result.text = "Error performing tesseract..";
             result.isValid = false;
+            return result;
         }
+
 
         return result;
     }

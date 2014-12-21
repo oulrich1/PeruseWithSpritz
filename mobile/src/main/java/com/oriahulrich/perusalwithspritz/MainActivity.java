@@ -8,6 +8,9 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -39,7 +42,7 @@ import org.opencv.engine.OpenCVEngineInterface;
 public class MainActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
-    // Load Important Libraries
+    // Not important but for leaning purposes
     static {
         System.loadLibrary("TessWrapperNDKModule");
     }
@@ -350,13 +353,98 @@ public class MainActivity extends Activity
                 .commit();
     }
 
+    // http://wolfpaulus.com/jounal/android-journal/android-and-ocr/
+    private Bitmap reorientImage( Bitmap bitmap, Uri uri ) {
+
+        try {
+            ExifInterface exif = new ExifInterface( uri.getPath() );
+            int exifOrientation = exif.getAttributeInt( ExifInterface.TAG_ORIENTATION,
+                                                        ExifInterface.ORIENTATION_NORMAL );
+
+            Log.v(TAG, "Orient: " + exifOrientation);
+
+            int rotate = 0;
+            switch (exifOrientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotate = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotate = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotate = 270;
+                    break;
+            }
+
+            Log.v(TAG, "Rotation: " + rotate);
+
+            if (rotate != 0) {
+
+                // Getting width & height of the given image.
+                int w = bitmap.getWidth();
+                int h = bitmap.getHeight();
+
+                // Setting pre rotate
+                Matrix mtx = new Matrix();
+                mtx.preRotate(rotate);
+
+                // Rotating Bitmap
+                // tesseract req. ARGB_8888
+                return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false)
+                             .copy(Bitmap.Config.ARGB_8888, true);
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Rotate or coversion failed: " + e.toString());
+        }
+
+        return bitmap;
+    }
+
+    public Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // CREATE A MATRIX FOR THE MANIPULATION
+        Matrix matrix = new Matrix();
+        // RESIZE THE BIT MAP
+        matrix.postScale(scaleWidth, scaleHeight);
+
+        // "RECREATE" THE NEW BITMAP
+        Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, false);
+        return resizedBitmap;
+    }
+
+    private Bitmap resizeIfTooLarge(Bitmap bitmap) {
+        if ( bitmap.getHeight() > 1000
+                || bitmap.getWidth() > 1000 )
+        {
+            double ratio;
+            int newHeight;
+            int newWidth;
+            if ( bitmap.getHeight() > 1000 ) {
+                ratio = 1000.0/bitmap.getHeight();
+                newHeight = 1000;
+                newWidth = (int) (ratio * bitmap.getWidth());
+            } else {
+                ratio = 1000.0/bitmap.getWidth();
+                newWidth = 1000;
+                newHeight = (int) (ratio * bitmap.getHeight());
+            }
+            bitmap = getResizedBitmap( bitmap, newHeight, newWidth );
+        }
+        return bitmap;
+    }
 
     public String doOcrGetText( Uri imageUri ) {
         if ( imageUri == null ) {
             return "";
         }
 
-        Toast.makeText(this, "This will take a few seconds..", Toast.LENGTH_LONG).show();
+//        Toast.makeText(this, "This will take a few seconds..",
+//                       Toast.LENGTH_LONG).show();
+
         Ocr ocr = new Ocr( this );
 
         Bitmap bitmap;
@@ -368,13 +456,24 @@ public class MainActivity extends Activity
             return "";
         }
 
+        bitmap = resizeIfTooLarge( bitmap );
+        bitmap = reorientImage( bitmap, imageUri );
+
+        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
+
         ocr.setImage(bitmap);
         Ocr.Result result = ocr.performOcr();
 
+        bitmap = ocr.getImage();
+        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
+
         if ( !result.isValid ) {
             Toast.makeText(this, "Ocr Failed", Toast.LENGTH_LONG).show();
-            return "";
+            return ""; // invalid text
         } else {
+
+            // text cleaning specific to perusing
+            result.text = result.text.replaceAll("[^a-zA-Z0-9]+", "");
             Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
         }
 
