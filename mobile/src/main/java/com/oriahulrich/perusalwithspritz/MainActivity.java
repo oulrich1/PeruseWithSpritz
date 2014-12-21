@@ -30,6 +30,11 @@ import com.spritzinc.android.sdk.SpritzSDK;
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 import com.oriahulrich.perusalwithspritz.lib.Ocr;
 
+import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.LoaderCallbackInterface;
+import org.opencv.android.OpenCVLoader;
+import org.opencv.engine.OpenCVEngineInterface;
+
 
 public class MainActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -144,6 +149,28 @@ public class MainActivity extends Activity
         } catch ( Exception e ) {
             Log.d(TAG, "Spritz failed to init..");
         }
+    }
+
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            switch (status) {
+                case LoaderCallbackInterface.SUCCESS:
+                {
+                    Log.d(TAG, "OpenCV loaded successfully");
+                } break;
+                default:
+                {
+                    super.onManagerConnected(status);
+                } break;
+            }
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
     }
 
     /** TODO */
@@ -329,7 +356,7 @@ public class MainActivity extends Activity
             return "";
         }
 
-        Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "This will take a few seconds..", Toast.LENGTH_LONG).show();
         Ocr ocr = new Ocr( this );
 
         Bitmap bitmap;
@@ -341,7 +368,7 @@ public class MainActivity extends Activity
             return "";
         }
 
-        ocr.setImage( bitmap );
+        ocr.setImage(bitmap);
         Ocr.Result result = ocr.performOcr();
 
         if ( !result.isValid ) {
@@ -391,6 +418,7 @@ public class MainActivity extends Activity
 
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
                 Helpers.globalAppsMediaScanIntent( this, mImageUri.getPath() );
                 doOcrAndSpritz( mImageUri );
             } else if (resultCode == RESULT_CANCELED) {

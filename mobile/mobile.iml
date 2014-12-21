@@ -117,6 +117,7 @@
     <orderEntry type="library" exported="" name="api-client-1.0.5" level="project" />
     <orderEntry type="library" exported="" name="spritz-engine-common-1.0.10" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.1" level="project" />
+    <orderEntry type="module" module-name="opencv" exported="" />
   </component>
 </module>
 
