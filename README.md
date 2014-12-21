@@ -17,3 +17,11 @@ If the Spritzing was done on a URL then the text is not saved, rather, only
 the url is saved. In that case, the title is set to the part after the web protocol
 "http://" stuff in the url. (Maybe the app should just save the text and not the
 URL to prevent multiple spritz web scrapes?)
+
+## Todo:
+- PDF Support
+- E-Pub Support
+- Perusal Sharing
+- Filtering for OCR
+- Wearable Spritz Views. If wearable is present, send text data to the watch instead on "Spritz"
+
