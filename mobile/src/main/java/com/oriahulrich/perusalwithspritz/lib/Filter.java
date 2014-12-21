@@ -9,6 +9,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 
 /**
  * Created by oriahulrich on 12/20/14.
@@ -84,13 +85,15 @@ public class Filter {
                                     255, Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
                                     Imgproc.THRESH_BINARY, blockSize, meanOffset );
 
+        // slow and does not work to well
+//        Photo.fastNlMeansDenoising( tmpImage, filteredImage, 3, 7, 21);
 
         Bitmap newImage = Bitmap.createBitmap( filteredImage.width(),
                                                filteredImage.height(),
                                                Bitmap.Config.ARGB_8888 );
 
         // note: tmpImage is adaptiveThresholded image
-        Utils.matToBitmap( tmpImage, newImage );
+        Utils.matToBitmap( filteredImage, newImage );
 
         return newImage;
     }

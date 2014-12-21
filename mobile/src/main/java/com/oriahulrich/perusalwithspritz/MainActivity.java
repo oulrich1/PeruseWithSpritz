@@ -515,13 +515,13 @@ public class MainActivity extends Activity
 
 
         // remove the set background on release. they are here for testing purposes
-        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
+//        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
 
         ocr.setImage(bitmap);
         Ocr.Result result = ocr.performOcr();
 
-        bitmap = ocr.getImage();
-        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
+//        bitmap = ocr.getImage();
+//        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
 
         if ( !result.isValid ) {
             Toast.makeText(this, "Ocr Failed", Toast.LENGTH_LONG).show();
