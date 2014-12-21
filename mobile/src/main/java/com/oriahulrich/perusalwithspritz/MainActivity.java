@@ -76,13 +76,17 @@ public class MainActivity extends Activity
     // argument to the edit text fragment
     private String mText;
 
-    // argument to the ocr tool for processing
-    // then when its finished
+    // arguments to the ocr functionality //
     private boolean mOcrEnabled;
     private Uri mImageUri;
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
     private Uri fileUri;
 
+    // true when the user shared an image but shouldnt
+    // process it until after the view finishes loading..
+    private boolean m_doOcrAndSpritzAfterViewLoads;
+
+    // TODO: rename this to PerusaDataInputState or just InputState
     private TextInputState mTextInputState;
 
     public SQLiteDAO getSqLiteDAO() {
@@ -106,6 +110,8 @@ public class MainActivity extends Activity
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
+
+        m_doOcrAndSpritzAfterViewLoads = false;
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equals(type)) {
@@ -161,6 +167,17 @@ public class MainActivity extends Activity
                 case LoaderCallbackInterface.SUCCESS:
                 {
                     Log.d(TAG, "OpenCV loaded successfully");
+
+                    /// not sure if this is the right way to do this
+                    /// but since we shouldnt ocr a shared image as soon
+                    /// as it is sent but wait for loading to finish.
+                    /// specifically, wait until the view is drawn AND
+                    /// when opencv is loaded.. (at LEAST the latter)
+                    if ( m_doOcrAndSpritzAfterViewLoads ) {
+                        doDeferedOcrAndSpritzOnSharedImage();
+                        m_doOcrAndSpritzAfterViewLoads = false;
+                        return;
+                    }
                 } break;
                 default:
                 {
@@ -210,6 +227,7 @@ public class MainActivity extends Activity
             Log.d(TAG, "handleSendImage.. got the image");
 
             // Update UI to reflect image being shared
+            mText = "";
             mImageUri = imageUri;
             mTextInputState = TextInputState.IMAGE_OCR_SHARE;
         }
@@ -303,24 +321,9 @@ public class MainActivity extends Activity
         }
         else if ( mTextInputState == TextInputState.IMAGE_OCR_SHARE )
         {
-            // true when we need to go straight to the spritzing screen
-            // false when we want to show the user the text first before spritzing
+            m_doOcrAndSpritzAfterViewLoads = true;
+
             boolean isForceLoadSpritz = false;
-
-            if ( mOcrEnabled )
-            {
-                Log.d(TAG, "OCR and then run editText fragment on text");
-                mText = doOcrGetText( mImageUri );
-            }
-            else {
-                Toast.makeText( this,
-                                "Camera was not detected.. will not OCR..",
-                                Toast.LENGTH_SHORT).show();
-                mText = "";
-            }
-
-            // then populate the edit text fragment with the text
-            // and let the user press the "Spritz" action in the action bar
             fragment = PerusalEditTextFragment
                     .newInstance(position + 1, mText, isForceLoadSpritz);
         }
@@ -339,6 +342,38 @@ public class MainActivity extends Activity
     }
 
 
+    /// when an image was shared but we should not ocr it until the app fully loads
+    /// (at least when the view finishes loading i think)
+    public void doDeferedOcrAndSpritzOnSharedImage() {
+
+        if ( mOcrEnabled )
+        {
+            Log.d(TAG, "OCR and then run editText fragment on text");
+            mText = doOcrGetText( mImageUri );
+        }
+        else {
+            Toast.makeText( this,
+                    "Ocr is disabled for now..",
+                    Toast.LENGTH_SHORT).show();
+            mText = "";
+        }
+
+        // true when we need to go straight to the spritzing screen
+        // false when we want to show the user the text first before spritzing
+        boolean isForceLoadSpritz = false;
+
+        // then populate the edit text fragment with the text
+        // and let the user press the "Spritz" action in the action bar
+        Fragment fragment = PerusalEditTextFragment
+                .newInstance(1, mText, isForceLoadSpritz);
+
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
+    }
+
     public void doSelectRecentListFragment(int position)
     {
         Log.d(TAG, "Recent List Fragment about to be loaded");
@@ -352,6 +387,25 @@ public class MainActivity extends Activity
                 .replace(R.id.container, fragment)
                 .commit();
     }
+
+
+    public void doSelectOcrFragment(int position)
+    {
+        if (!mOcrEnabled) {
+            Toast.makeText(this, "Camera not detected..", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. ");
+
+        // create picture file and take picture
+        // when the picture is finished the rest of
+        // the ocr/spritzing logic is handled..
+        dispatchTakePictureIntent();
+    }
+
+
+    /// --- HELPERS --- ///
 
     // http://wolfpaulus.com/jounal/android-journal/android-and-ocr/
     private Bitmap reorientImage( Bitmap bitmap, Uri uri ) {
@@ -459,6 +513,8 @@ public class MainActivity extends Activity
         bitmap = resizeIfTooLarge( bitmap );
         bitmap = reorientImage( bitmap, imageUri );
 
+
+        // remove the set background on release. they are here for testing purposes
         findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
 
         ocr.setImage(bitmap);
@@ -489,7 +545,6 @@ public class MainActivity extends Activity
 
         return result.text;
     }
-
 
     public void doOcrAndSpritz( Uri imageUri ) {
 
@@ -569,20 +624,6 @@ public class MainActivity extends Activity
     }
 
 
-    public void doSelectOcrFragment(int position)
-    {
-        if (!mOcrEnabled) {
-            Toast.makeText(this, "Camera not detected..", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. ");
-
-        // create picture file and take picture
-        // when the picture is finished the rest of
-        // the ocr/spritzing logic is handled..
-        dispatchTakePictureIntent();
-    }
 
 
     public void onSectionAttached(int number) {
