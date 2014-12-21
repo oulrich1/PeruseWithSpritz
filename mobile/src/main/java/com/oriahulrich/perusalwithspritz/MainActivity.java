@@ -473,7 +473,17 @@ public class MainActivity extends Activity
         } else {
 
             // text cleaning specific to perusing
-            result.text = result.text.replaceAll("[^a-zA-Z0-9]+", "");
+            String text = result.text;
+            String[] words = text.split(" ");
+            text = "";
+
+            // remove bad characters per word
+            for ( int i = 0; i < words.length; ++i ) {
+                words[i] = words[i].replaceAll("[^a-zA-Z0-9]+", "");
+                text += words[i] + " ";
+            }
+            result.text = text;
+
             Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
         }
 
