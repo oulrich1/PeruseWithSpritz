@@ -9,7 +9,9 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -132,7 +134,36 @@ public class Helpers {
         mediaScanIntent.setData(contentUri);
         context.sendBroadcast(mediaScanIntent);
     }
+
+    // taken from last post on stack overflow
+    // http://stackoverflow.com/questions/8474821/how-to-get
+    // -the-android-path-string-to-a-file-on-assets-folder
+    public static File getRobotCacheFile(Context context, String assetname) throws IOException {
+        File cacheFile = new File(context.getCacheDir(), assetname);
+        try {
+            InputStream inputStream = context.getAssets().open(assetname);
+            try {
+                FileOutputStream outputStream = new FileOutputStream(cacheFile);
+                try {
+                    byte[] buf = new byte[1024];
+                    int len;
+                    while ((len = inputStream.read(buf)) > 0) {
+                        outputStream.write(buf, 0, len);
+                    }
+                } finally {
+                    outputStream.close();
+                }
+            } finally {
+                inputStream.close();
+            }
+        } catch (IOException e) {
+            throw new IOException("Could not open " + assetname, e);
+        }
+        return cacheFile;
+    }
 }
+
+
 
 
 

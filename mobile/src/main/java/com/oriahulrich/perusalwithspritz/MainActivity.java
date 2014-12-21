@@ -7,6 +7,7 @@ import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -239,6 +240,7 @@ public class MainActivity extends Activity
         }
     }
 
+
     /* Perform the transaction to the fragment */
     private void doSelectPerusalDetermineSpritzingFragment(int position)
     {
@@ -278,22 +280,7 @@ public class MainActivity extends Activity
             if ( mOcrEnabled )
             {
                 Log.d(TAG, "OCR and then run editText fragment on text");
-                // have URI of image, need to OCR
-                Toast.makeText( this,
-                        "..please wait a moment.. extracting text from the pixels",
-                        Toast.LENGTH_LONG).show();
-
-                // Text Recognition
-                Ocr ocr = new Ocr();
-                ocr.setImage( mImageUri );
-                Ocr.Result result = ocr.performOcr();
-                mText = result.text;
-
-                if ( result.isValid ) {
-                    // then we can safely assume that OCR was
-                    // mostly a success and we can spritz the text
-                    isForceLoadSpritz = false;
-                }
+                mText = doOcrGetText( mImageUri );
             }
             else {
                 Toast.makeText( this,
@@ -337,24 +324,43 @@ public class MainActivity extends Activity
     }
 
 
-    public void doOcrAndSpritz( Uri imageUri ) {
-
-        if ( imageUri == null ){
-            return;
+    public String doOcrGetText( Uri imageUri ) {
+        if ( imageUri == null ) {
+            return "";
         }
-
-        // perform text recognition on the image URI saved onactivityresult
-        Ocr ocr = new Ocr();
-        ocr.setImage( imageUri );
 
         Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
+        Ocr ocr = new Ocr( this );
+
+        Bitmap bitmap;
+        try {
+            bitmap = MediaStore.Images.Media
+                    .getBitmap(this.getContentResolver(), imageUri);
+        } catch (Exception e){
+            Log.d(TAG, "Could not create image from URI");
+            return "";
+        }
+
+        ocr.setImage( bitmap );
         Ocr.Result result = ocr.performOcr();
+
         if ( !result.isValid ) {
             Toast.makeText(this, "Ocr Failed", Toast.LENGTH_LONG).show();
-            return;
+            return "";
+        } else {
+            Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
         }
-        mText = result.text;
-        Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
+
+        return result.text;
+    }
+
+
+    public void doOcrAndSpritz( Uri imageUri ) {
+
+        if ( imageUri == null )
+            return;
+
+        mText = doOcrGetText( imageUri );
 
         ///  - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // then populate the edit text fragment with the text
@@ -433,7 +439,7 @@ public class MainActivity extends Activity
             return;
         }
 
-        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. " );
+        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. ");
 
         // create picture file and take picture
         // when the picture is finished the rest of
