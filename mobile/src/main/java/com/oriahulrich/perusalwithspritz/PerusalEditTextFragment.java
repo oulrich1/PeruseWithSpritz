@@ -58,6 +58,7 @@ public class PerusalEditTextFragment extends Fragment {
     // note: not related to inputMEthodState
     private int mUsageState; // for fun (what usage message shall we show?!)
 
+
     /**
      * Returns a new instance of this fragment for the given section
      * number.
@@ -245,12 +246,13 @@ public class PerusalEditTextFragment extends Fragment {
     }
 
     // given the text state -> msg can be either text or a url..
+    // NOTE: this is the only entry point to spritzing.. just FYI
     private void navigateToSpritzFragment(int textState, String msg) {
         int peruseSectionNumber = 1; // force section nav number
         boolean shouldAttemptSavePerusal = true;
         Fragment fragment = PerusalSpritzFragment
                 .newInstance( peruseSectionNumber, textState,
-                              msg, shouldAttemptSavePerusal );
+                        msg, shouldAttemptSavePerusal );
 
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()

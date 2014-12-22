@@ -6,6 +6,8 @@ import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
@@ -15,6 +17,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -134,10 +138,9 @@ public class MainActivity extends Activity
                 handleSendText(intent); // Handle text being sent
             } else if (type.startsWith("image/")) {
                 handleSendImage(intent); // Handle single image being sent
-            }
-        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null) {
-            if (type.startsWith("image/")) {
-                handleSendMultipleImages(intent); // Handle multiple images being sent
+            } else if (type.startsWith("application/epub+zip")) {
+                Log.d(TAG, "We have recieved an epub.");
+                handleSendEpub(intent);
             }
         } else {
             // Handle other intents, such as being started from the home screen
@@ -195,9 +198,54 @@ public class MainActivity extends Activity
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
         Log.d(TAG, "onResume");
 
-//        if ( m_doDeferedUrlShareSpritz ) {
-//            doDeferedUrlShareSpritz();
-//        }
+
+        /// TODO: the following assumes API level 20 (min was 15, but cur set to 20)
+
+//        /** Sample Notification - creating an intent for wearable  */
+//        Intent notificationIntent = new Intent(this, MainActivity.class);
+//        PendingIntent displayPendingIntent
+//                = PendingIntent.getActivity(this, 0, notificationIntent,
+//                    PendingIntent.FLAG_UPDATE_CURRENT);
+//
+//        // expect to extend the default builder with wearable specific intent stuff
+//        Notification.WearableExtender wearableExtender;
+//        wearableExtender = new Notification.WearableExtender()
+//                .setDisplayIntent(displayPendingIntent)
+//                .setCustomSizePreset(Notification.WearableExtender.SIZE_MEDIUM);
+//
+//        // the notification that is actually a wearable notification specifically
+//        // to set the wearable to display the activity upon completion of notification
+//        Notification notif
+//                = new Notification.Builder( this )
+//                        .extend(wearableExtender)
+//                        .setContentTitle("Spritz This!") /// this might conflict with default extender behavior.
+//                        .build();
+//
+//        notif.notify();
+
+        /** Sample notification - using notification compat */
+//        int notificationId = 001;
+//// Build intent for notification content
+//        Intent viewIntent = new Intent(this, MainActivity.class);
+//        String EXTRA_INTENT_ID = "extra_intent_id";
+//        int eventId = 123;
+//        viewIntent.putExtra(EXTRA_INTENT_ID, eventId);
+//        PendingIntent viewPendingIntent =
+//                PendingIntent.getActivity(this, 0, viewIntent, 0);
+//
+//        NotificationCompat.Builder notificationBuilder =
+//                new NotificationCompat.Builder(this)
+//                        .setSmallIcon(R.drawable.ic_perusal_dark)
+//                        .setContentTitle("Event Title")
+//                        .setContentText("Event Location")
+//                        .setContentIntent(viewPendingIntent);
+//
+//// Get an instance of the NotificationManager service
+//        NotificationManagerCompat notificationManager =
+//                NotificationManagerCompat.from(this);
+
+// Build the notification and issues it with notification manager.
+//        notificationManager.notify(notificationId, notificationBuilder.build());
     }
 
     /* Expect the text to be a URL String */
@@ -248,6 +296,17 @@ public class MainActivity extends Activity
                     "Spritzing multiple images is not supported, sorry..",
                     Toast.LENGTH_LONG).show();
             // Update UI to reflect multiple images being shared
+        }
+    }
+
+    void handleSendEpub( Intent intent ) {
+        Log.d(TAG, "ACTIVITY handleSendEpub");
+        Uri epubUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (epubUri != null) {
+            Log.d(TAG, " .. epub uri is valid!");
+            Toast.makeText( this,
+                    "Epub is on it's way to being implemented",
+                    Toast.LENGTH_LONG).show();
         }
     }
 

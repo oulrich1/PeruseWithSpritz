@@ -22,6 +22,14 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.NotificationCompat.WearableExtender;
+
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.wearable.NodeApi;
+import com.google.android.gms.wearable.Wearable;
 import com.oriahulrich.perusalwithspritz.adapters.RecentPerusalsAdapter;
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
@@ -64,6 +72,7 @@ public class PerusalSpritzFragment
 
     private String mTextSpritz;
     private View mRootView;
+    private boolean mShouldSavePerusal;
 
     /** Spritz view specific member fields */
     private FrameLayout mFrameLayoutSpritzContainer;
@@ -75,7 +84,10 @@ public class PerusalSpritzFragment
     private static final String PREF_SPEED = "speed";
 
 
-    private boolean mShouldSavePerusal;
+    // Experimental:
+    private boolean m_didDetectWearable;
+    private boolean m_isWearableSpritzEnabled;
+
 
     /// For the purpose of extracting the domain name ///
     // http://www.mkyong.com/regular-expressions/domain-name-regular-expression-example/
@@ -128,6 +140,9 @@ public class PerusalSpritzFragment
     private void common_construct() {
         mTextSpritz = "";
         mShouldSavePerusal = false;
+
+        m_didDetectWearable = false;        // if we detected a wearable
+        m_isWearableSpritzEnabled = false;  // if the user wants to use their wearable if it is connected
     }
 
     @Override
@@ -211,7 +226,20 @@ public class PerusalSpritzFragment
                 // will not create if already exists
                 createAddPerusalToDB(sqLiteDAO, mTextSpritz);
             }
-            doSpritzing( mTextSpritz );
+
+//            GoogleApiClient client;
+//            PendingResult<NodeApi.GetConnectedNodesResult> devices
+//                    = Wearable.NodeApi.getConnectedNodes(client);
+
+
+            if ( m_didDetectWearable && m_isWearableSpritzEnabled ){
+                // then two options are valid: (think run-time and feasibility)
+                // (1) send text to spritzing app on wear
+                // (2) send spritz notification card/image to wear
+
+            } else {
+                doSpritzing( mTextSpritz );
+            }
         }
     }
 
