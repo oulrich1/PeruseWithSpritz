@@ -3,6 +3,9 @@ package com.oriahulrich.perusalwithspritz;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -19,6 +22,9 @@ import java.util.Date;
  * Created by oriahulrich on 12/14/14.
  */
 public class Helpers {
+
+    public static final String TAG = "Helpers Static Class";
+
     public static String capitalize(String line)
     {
         if (line.isEmpty()) {
@@ -161,6 +167,104 @@ public class Helpers {
         }
         return cacheFile;
     }
+
+
+
+
+    /// --- HELPERS --- ///
+
+    // http://wolfpaulus.com/jounal/android-journal/android-and-ocr/
+    public static Bitmap reorientImage( Bitmap bitmap, Uri uri ) {
+
+        try {
+            ExifInterface exif = new ExifInterface( uri.getPath() );
+            int exifOrientation = exif.getAttributeInt( ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL );
+
+            Log.v(TAG, "Orient: " + exifOrientation);
+
+            int rotate = 0;
+            switch (exifOrientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    rotate = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    rotate = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    rotate = 270;
+                    break;
+            }
+
+            Log.v(TAG, "Rotation: " + rotate);
+
+            if (rotate != 0) {
+
+                // Getting width & height of the given image.
+                int w = bitmap.getWidth();
+                int h = bitmap.getHeight();
+
+                // Setting pre rotate
+                Matrix mtx = new Matrix();
+                mtx.preRotate(rotate);
+
+                // Rotating Bitmap
+                // tesseract req. ARGB_8888
+                return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false)
+                        .copy(Bitmap.Config.ARGB_8888, true);
+            }
+
+        } catch (Exception e) {
+            Log.e(TAG, "Rotate or coversion failed: " + e.toString());
+        }
+
+        return bitmap;
+    }
+
+    public static Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        // CREATE A MATRIX FOR THE MANIPULATION
+        Matrix matrix = new Matrix();
+        // RESIZE THE BIT MAP
+        matrix.postScale(scaleWidth, scaleHeight);
+
+        // "RECREATE" THE NEW BITMAP
+        Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, false);
+        return resizedBitmap;
+    }
+
+    public static Bitmap resizeIfTooLarge(Bitmap bitmap, int maxDimensionSize) {
+
+        // set a maximum cap on the resize capability
+        if (maxDimensionSize > 1000) {
+            maxDimensionSize = 1000;
+        }
+
+        if ( bitmap.getHeight() > maxDimensionSize
+                || bitmap.getWidth() > maxDimensionSize )
+        {
+            double ratio;
+            int newHeight;
+            int newWidth;
+            if ( bitmap.getHeight() > maxDimensionSize ) {
+                ratio = ((double)maxDimensionSize) / bitmap.getHeight();
+                newHeight = maxDimensionSize;
+                newWidth = (int) (ratio * bitmap.getWidth());
+            } else {
+                ratio = ((double)maxDimensionSize) / bitmap.getWidth();
+                newWidth = maxDimensionSize;
+                newHeight = (int) (ratio * bitmap.getHeight());
+            }
+            bitmap = getResizedBitmap( bitmap, newHeight, newWidth );
+        }
+
+        return bitmap;
+    }
+
+
 }
 
 

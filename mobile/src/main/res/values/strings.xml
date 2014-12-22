@@ -30,16 +30,17 @@
         Libraries and Resources used:
         <b>&bull;&nbsp;&nbsp;<a href="https://johnkil.github.io/Android-RobotoTextView/">Android-RobotoTextView</a></b>
     <br>
+        <b>&bull;&nbsp;&nbsp;Tesseract and Leptonica</b>
+    <br>
         <b>&bull;&nbsp;&nbsp;Android</b>
     <br>
-        <b>&bull;&nbsp;&nbsp;Tesseract and Leptonica</b>
+        <b>&bull;&nbsp;&nbsp;Spritz</b>
+    <br>
+        <b>&bull;&nbsp;&nbsp;OpenCV</b>
     <br>
         <b>&bull;&nbsp;&nbsp;NDK</b>
     ]]>
     </string>
     <string name="about_dismiss">Dismiss</string>
-
-
-
 
 </resources>

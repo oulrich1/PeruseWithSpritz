@@ -7,7 +7,10 @@ package com.oriahulrich.perusalwithspritz;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,7 +21,10 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.oriahulrich.perusalwithspritz.lib.Ocr;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
+
+// TODO: call this the perusal Controller fragment or that nature..
 
 /**
  * A Fragment to be used in the case when we want the user to paste text
@@ -31,13 +37,25 @@ public class PerusalEditTextFragment extends Fragment {
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private static final String ARG_FORCE_SPRITZ = "force_spritz_boolean";
-    private static final String ARG_TEXT = "arg_text";
+
+    private static final String ARG_INPUT_METHOD = "arg_input_method";
+    private static final String ARG_TEXT = "arg_text";  // text to spritz
+    private static final String ARG_URL = "arg_url";    // url to the page with text
+    private static final String ARG_URI = "arg_uri";    // uri to the image to ocr and spritz
 
     private String mText;           // text, which could be initialized with share via feature
-    private EditText mEditText;     // the editable text view which will update mText, when necessary
-    private boolean mForceLoadSpritz;
+    private String mURL;
+    private Uri    mUri;
 
+    private EditText mEditText;     // the editable text view which will update mText, when necessary
+    private boolean  mOcrEnabled;
+
+    // true if this instance already did ocr on the given
+    // image (new instances will get the chance to run ocr again)
+    private boolean  m_didOcr;
+
+
+    // note: not related to inputMEthodState
     private int mUsageState; // for fun (what usage message shall we show?!)
 
     /**
@@ -49,21 +67,50 @@ public class PerusalEditTextFragment extends Fragment {
 
     public static PerusalEditTextFragment newInstance(int sectionNumber,
                                                       String text,
-                                                      boolean isForceLoadSpritz)
+                                                      MainActivity.InputMethodState inputMethod)
     {
         Log.d(TAG, " newInstance");
         PerusalEditTextFragment fragment = new PerusalEditTextFragment();
         Bundle args = new Bundle();
-        args.putBoolean(ARG_FORCE_SPRITZ, isForceLoadSpritz); // this is simply a hack for now
+
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-        args.putString(ARG_TEXT, text);
+
+        args.putInt(ARG_INPUT_METHOD, inputMethod.ordinal());
+        if ( inputMethod.ordinal() == MainActivity.InputMethodState.TEXT_EDIT.ordinal() ) {
+            args.putString(ARG_TEXT, text);
+        } else if ( inputMethod.ordinal() == MainActivity.InputMethodState.URL_SPRITZ.ordinal() ) {
+            args.putString(ARG_URL, text);
+        }
+
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    public static PerusalEditTextFragment newInstance(int sectionNumber,
+                                                      Uri uri,
+                                                      MainActivity.InputMethodState inputMethod)
+    {
+        Log.d(TAG, " newInstance");
+        PerusalEditTextFragment fragment = new PerusalEditTextFragment();
+        Bundle args = new Bundle();
+
+        args.putInt(ARG_SECTION_NUMBER, sectionNumber); // for the activity..
+
+        args.putInt(ARG_INPUT_METHOD, inputMethod.ordinal());
+        if ( inputMethod.ordinal() == MainActivity.InputMethodState.IMAGE_SHARE.ordinal() ) {
+            args.putParcelable(ARG_URI, uri);
+        }
+
         fragment.setArguments(args);
         return fragment;
     }
 
     public PerusalEditTextFragment() {
         mText = "";
+        mURL = "";
         mUsageState = 1;
+        mOcrEnabled = true; // if camera is detected
+        m_didOcr = false;
     }
 
     @Override
@@ -76,22 +123,49 @@ public class PerusalEditTextFragment extends Fragment {
 
         mEditText = (EditText) rootView.findViewById(R.id.editTextPerusal);
 
-        // check if url nad need to help spritz run
-        mForceLoadSpritz = getArguments().getBoolean(ARG_FORCE_SPRITZ);
-        if ( mForceLoadSpritz ) {
-            Log.d(TAG, " ..onCreateView Still.. but forcing navigation to spritz.. assuming text is URL");
-            int textState = Perusal.Mode.URL.ordinal();
-            navigateToSpritzFragment(textState, mText);
-            return rootView;
-        }
-
-        mText = getArguments().getString(ARG_TEXT);
-
-        if ( mText != null && !mText.isEmpty() ) {
-            mEditText.setText(mText);
-        }
-
         return rootView;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume");
+
+        // when we finish loading the view and everything
+        int inputMethod = getArguments().getInt(ARG_INPUT_METHOD);
+        if ( inputMethod == MainActivity.InputMethodState.TEXT_EDIT.ordinal() ) {
+            mText = getArguments().getString(ARG_TEXT);
+            if ( mText != null && !mText.isEmpty() ) {
+                mEditText.setText(mText);
+                // and let the user hit the actionbar play button to spritz the text
+            }
+        } else if ( inputMethod == MainActivity.InputMethodState.URL_SPRITZ.ordinal() ) {
+            mURL = getArguments().getString(ARG_URL);
+            // load the spritz fragment
+            int textState = Perusal.Mode.URL.ordinal();
+            navigateToSpritzFragment(textState, mURL);
+
+        } else if ( inputMethod == MainActivity.InputMethodState.IMAGE_SHARE.ordinal() ) {
+            mUri = getArguments().getParcelable(ARG_URI);
+
+            // perform ocr and then spritz
+            if ( mOcrEnabled )
+            {
+                if ( !m_didOcr ){
+                    Log.d(TAG, "OCR and then run editText fragment on text");
+                    mText = doOcrGetText( mUri );
+                    m_didOcr = true;
+                }
+            } else  {
+                Toast.makeText( getActivity(),
+                        "Ocr is disabled for now..",
+                        Toast.LENGTH_SHORT).show();
+                mText = "";
+            }
+
+            int textState = Perusal.Mode.TEXT.ordinal();
+            navigateToSpritzFragment(textState, mText);
+        }
     }
 
     @Override
@@ -141,7 +215,7 @@ public class PerusalEditTextFragment extends Fragment {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_example) {
+        if (id == R.id.action_perform_spritz_on_text) {
 
             if (mEditText != null) {
                 mText = mEditText.getText().toString();
@@ -178,5 +252,64 @@ public class PerusalEditTextFragment extends Fragment {
         ((MainActivity) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
     }
+
+
+    // algorithm stuff
+
+    public String doOcrGetText( Uri imageUri ) {
+        if ( imageUri == null ) {
+            return "";
+        }
+
+//        Toast.makeText(this, "This will take a few seconds..",
+//                       Toast.LENGTH_LONG).show();
+
+        Ocr ocr = new Ocr( getActivity() );
+
+        Bitmap bitmap;
+        try {
+            bitmap = MediaStore.Images.Media
+                    .getBitmap(getActivity().getContentResolver(), imageUri);
+        } catch (Exception e){
+            Log.d(TAG, "Could not create image from URI");
+            return "";
+        }
+
+        int maxDimLength = 1000;
+        bitmap = Helpers.resizeIfTooLarge( bitmap, maxDimLength );
+        bitmap = Helpers.reorientImage( bitmap, imageUri );
+
+        // remove the set background on release. they are here for testing purposes
+//        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
+
+        ocr.setImage(bitmap);
+        Ocr.Result result = ocr.performOcr();
+
+//        bitmap = ocr.getImage();
+//        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
+
+        if ( !result.isValid ) {
+            Toast.makeText(getActivity(), "Ocr Failed", Toast.LENGTH_LONG).show();
+            return ""; // invalid text
+        } else {
+
+            // text cleaning specific to perusing
+            String text = result.text;
+            String[] words = text.split(" ");
+            text = "";
+
+            // remove bad characters per word
+            for ( int i = 0; i < words.length; ++i ) {
+                words[i] = words[i].replaceAll("[^a-zA-Z0-9]+", "");
+                text += words[i] + " ";
+            }
+            result.text = text;
+
+            Toast.makeText(getActivity(), "Done", Toast.LENGTH_SHORT).show();
+        }
+
+        return result.text;
+    }
+
 }
 

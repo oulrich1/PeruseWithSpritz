@@ -63,11 +63,11 @@ public class MainActivity extends Activity
     // used to identify this class
     static private String TAG = "Main Activity";
 
-    public enum TextInputState {
-        URL_WEB_VIEW,
+    public enum InputMethodState {
+        URL_WEBVIEW,
         TEXT_EDIT,
         URL_SPRITZ,
-        IMAGE_OCR_SHARE,
+        IMAGE_SHARE,
     }
 
     // argument to the webview fragment
@@ -77,17 +77,18 @@ public class MainActivity extends Activity
     private String mText;
 
     // arguments to the ocr functionality //
-    private boolean mOcrEnabled;
+    private boolean mCameraDetected;
     private Uri mImageUri;
     private static final int CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 100;
     private Uri fileUri;
 
-    // true when the user shared an image but shouldnt
-    // process it until after the view finishes loading..
+    // TODO: Seriously -> defer these things AFTER spritz has finished loading
+    // but no need to check that logic twice.. just check it on resume probably
     private boolean m_doOcrAndSpritzAfterViewLoads;
+    private boolean m_doDeferedUrlShareSpritz;
 
     // TODO: rename this to PerusaDataInputState or just InputState
-    private TextInputState mTextInputState;
+    private InputMethodState mInputMethodState;
 
     public SQLiteDAO getSqLiteDAO() {
         return sqLiteDAO;
@@ -98,7 +99,7 @@ public class MainActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "ACTIVITY onCreate");
 
-        mOcrEnabled = Helpers.checkCameraHardware(this);
+        mCameraDetected = Helpers.checkCameraHardware(this);
 
         // initialize one and only DAO
         sqLiteDAO = new SQLiteDAO(this);
@@ -133,7 +134,7 @@ public class MainActivity extends Activity
         setContentView(R.layout.activity_main);
 
         Log.d( TAG, "Finished determining state: "
-                    + mTextInputState + " "
+                    + mInputMethodState + " "
                     + mText + " "
                     + mURL );
 
@@ -173,11 +174,11 @@ public class MainActivity extends Activity
                     /// as it is sent but wait for loading to finish.
                     /// specifically, wait until the view is drawn AND
                     /// when opencv is loaded.. (at LEAST the latter)
-                    if ( m_doOcrAndSpritzAfterViewLoads ) {
-                        doDeferedOcrAndSpritzOnSharedImage();
-                        m_doOcrAndSpritzAfterViewLoads = false;
-                        return;
-                    }
+//                    if ( m_doOcrAndSpritzAfterViewLoads ) {
+//                        doDeferedOcrAndSpritzOnSharedImage();
+//                        m_doOcrAndSpritzAfterViewLoads = false;
+//                        return;
+//                    }
                 } break;
                 default:
                 {
@@ -191,6 +192,11 @@ public class MainActivity extends Activity
     protected void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
+        Log.d(TAG, "onResume");
+
+//        if ( m_doDeferedUrlShareSpritz ) {
+//            doDeferedUrlShareSpritz();
+//        }
     }
 
     /** TODO */
@@ -207,12 +213,12 @@ public class MainActivity extends Activity
             {
 
                 mURL = sharedText;
-                mTextInputState = TextInputState.URL_SPRITZ;
+                mInputMethodState = InputMethodState.URL_SPRITZ;
             }
             else
             {
                 mText = sharedText;
-                mTextInputState = TextInputState.TEXT_EDIT;
+                mInputMethodState = InputMethodState.TEXT_EDIT;
             }
 //            doSelectDrawerItem( NavigationDrawerFragment.Position.PERUSAL.ordinal() );
         }
@@ -229,7 +235,7 @@ public class MainActivity extends Activity
             // Update UI to reflect image being shared
             mText = "";
             mImageUri = imageUri;
-            mTextInputState = TextInputState.IMAGE_OCR_SHARE;
+            mInputMethodState = InputMethodState.IMAGE_SHARE;
         }
     }
 
@@ -256,7 +262,7 @@ public class MainActivity extends Activity
         }
 
         mText = "";
-        mTextInputState = TextInputState.TEXT_EDIT;
+        mInputMethodState = InputMethodState.TEXT_EDIT;
 //        doSelectDrawerItem( NavigationDrawerFragment.Position.PERUSAL.ordinal() );
     }
 
@@ -289,49 +295,35 @@ public class MainActivity extends Activity
     }
 
 
-    /* Perform the transaction to the fragment */
+    // perform transition to section number 1 ( the 'peruse' item )
+    // which by default goes to the edit text fragment. the edit text
+    // fragment figures out what the text represents, in its onResume:
+    //      (1) text -> just stay in the fragment
+    //      (2) url -> open the spritz fragment (replace edit text fragment)
+    //      (3) image -> perform ocr and load the spritz fragment
     private void doSelectPerusalDetermineSpritzingFragment(int position)
     {
-        // now since we want to "peruse", we must determine
-        // which fragment to use exactly..
-        Log.d(TAG, "ACTIVITY doSelectDrawerItem");
         Fragment fragment;
-        if (mTextInputState == TextInputState.URL_WEB_VIEW)
-        {
-            /// THIS SHOULD NOT GET CALLED FOR NOW..
-            fragment = PerusalSelectionFragment.newInstance(position + 1, mURL);
-            Log.d(TAG, "Selection Fragment");
-        }
-        else if (mTextInputState == TextInputState.URL_SPRITZ)
-        {
-            // TODO: figure out why spritz does not load when is first fragment to load
-//            fragment = PerusalSpritzFragment
-//                        .newInstance( position + 1,
-//                                      Perusal.Mode.URL.ordinal(),
-//                                      mURL,
-//                                      true );
 
-            // falling back to going through the edit text fragment for no
-            // reason other than to make spritz work on the case a url is shared
-            boolean isForceLoadSpritz = true;
+        /* Always load the 'peruse' fragment (aka editText Fragment)
+         * but create an instance specific to each type */
+        if (mInputMethodState == InputMethodState.URL_SPRITZ) {
+            // the user shared a url
             fragment = PerusalEditTextFragment
-                    .newInstance(position + 1, mText, isForceLoadSpritz);
-
-            Log.d(TAG, "Spritz Direct URL SELECTION");
-        }
-        else if ( mTextInputState == TextInputState.IMAGE_OCR_SHARE )
-        {
-            m_doOcrAndSpritzAfterViewLoads = true;
-
-            boolean isForceLoadSpritz = false;
+                    .newInstance(position + 1, mURL, mInputMethodState );
+        } else if ( mInputMethodState == InputMethodState.IMAGE_SHARE ) {
+            // the user shared a raw image
             fragment = PerusalEditTextFragment
-                    .newInstance(position + 1, mText, isForceLoadSpritz);
-        }
-        else // if ( mTextInputState == TextInputState.TEXT_EDIT )
-        {   // should happen in any other case anyways..
-            Log.d(TAG, "EditText Fragment");
+                    .newInstance(position + 1, mImageUri, mInputMethodState );
+        } else if ( mInputMethodState == InputMethodState.TEXT_EDIT ) {
+            // the user shared raw text..
             fragment = PerusalEditTextFragment
-                    .newInstance(position + 1, mText, false);
+                    .newInstance(position + 1, mText, mInputMethodState );
+        } else {
+            // error
+            fragment = new Fragment();
+            Log.d(TAG, "ERROR: the input method state was not "
+                        + "valid. The fragment in drawer is set to empty.." );
         }
 
         // update the main content by replacing fragments
@@ -341,38 +333,6 @@ public class MainActivity extends Activity
                 .commit();
     }
 
-
-    /// when an image was shared but we should not ocr it until the app fully loads
-    /// (at least when the view finishes loading i think)
-    public void doDeferedOcrAndSpritzOnSharedImage() {
-
-        if ( mOcrEnabled )
-        {
-            Log.d(TAG, "OCR and then run editText fragment on text");
-            mText = doOcrGetText( mImageUri );
-        }
-        else {
-            Toast.makeText( this,
-                    "Ocr is disabled for now..",
-                    Toast.LENGTH_SHORT).show();
-            mText = "";
-        }
-
-        // true when we need to go straight to the spritzing screen
-        // false when we want to show the user the text first before spritzing
-        boolean isForceLoadSpritz = false;
-
-        // then populate the edit text fragment with the text
-        // and let the user press the "Spritz" action in the action bar
-        Fragment fragment = PerusalEditTextFragment
-                .newInstance(1, mText, isForceLoadSpritz);
-
-        // update the main content by replacing fragments
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .commit();
-    }
 
     public void doSelectRecentListFragment(int position)
     {
@@ -391,7 +351,7 @@ public class MainActivity extends Activity
 
     public void doSelectOcrFragment(int position)
     {
-        if (!mOcrEnabled) {
+        if (!mCameraDetected) {
             Toast.makeText(this, "Camera not detected..", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -404,169 +364,6 @@ public class MainActivity extends Activity
         dispatchTakePictureIntent();
     }
 
-
-    /// --- HELPERS --- ///
-
-    // http://wolfpaulus.com/jounal/android-journal/android-and-ocr/
-    private Bitmap reorientImage( Bitmap bitmap, Uri uri ) {
-
-        try {
-            ExifInterface exif = new ExifInterface( uri.getPath() );
-            int exifOrientation = exif.getAttributeInt( ExifInterface.TAG_ORIENTATION,
-                                                        ExifInterface.ORIENTATION_NORMAL );
-
-            Log.v(TAG, "Orient: " + exifOrientation);
-
-            int rotate = 0;
-            switch (exifOrientation) {
-                case ExifInterface.ORIENTATION_ROTATE_90:
-                    rotate = 90;
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_180:
-                    rotate = 180;
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_270:
-                    rotate = 270;
-                    break;
-            }
-
-            Log.v(TAG, "Rotation: " + rotate);
-
-            if (rotate != 0) {
-
-                // Getting width & height of the given image.
-                int w = bitmap.getWidth();
-                int h = bitmap.getHeight();
-
-                // Setting pre rotate
-                Matrix mtx = new Matrix();
-                mtx.preRotate(rotate);
-
-                // Rotating Bitmap
-                // tesseract req. ARGB_8888
-                return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, false)
-                             .copy(Bitmap.Config.ARGB_8888, true);
-            }
-
-        } catch (Exception e) {
-            Log.e(TAG, "Rotate or coversion failed: " + e.toString());
-        }
-
-        return bitmap;
-    }
-
-    public Bitmap getResizedBitmap(Bitmap bm, int newHeight, int newWidth) {
-        int width = bm.getWidth();
-        int height = bm.getHeight();
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        // CREATE A MATRIX FOR THE MANIPULATION
-        Matrix matrix = new Matrix();
-        // RESIZE THE BIT MAP
-        matrix.postScale(scaleWidth, scaleHeight);
-
-        // "RECREATE" THE NEW BITMAP
-        Bitmap resizedBitmap = Bitmap.createBitmap(bm, 0, 0, width, height, matrix, false);
-        return resizedBitmap;
-    }
-
-    private Bitmap resizeIfTooLarge(Bitmap bitmap) {
-        if ( bitmap.getHeight() > 1000
-                || bitmap.getWidth() > 1000 )
-        {
-            double ratio;
-            int newHeight;
-            int newWidth;
-            if ( bitmap.getHeight() > 1000 ) {
-                ratio = 1000.0/bitmap.getHeight();
-                newHeight = 1000;
-                newWidth = (int) (ratio * bitmap.getWidth());
-            } else {
-                ratio = 1000.0/bitmap.getWidth();
-                newWidth = 1000;
-                newHeight = (int) (ratio * bitmap.getHeight());
-            }
-            bitmap = getResizedBitmap( bitmap, newHeight, newWidth );
-        }
-        return bitmap;
-    }
-
-    public String doOcrGetText( Uri imageUri ) {
-        if ( imageUri == null ) {
-            return "";
-        }
-
-//        Toast.makeText(this, "This will take a few seconds..",
-//                       Toast.LENGTH_LONG).show();
-
-        Ocr ocr = new Ocr( this );
-
-        Bitmap bitmap;
-        try {
-            bitmap = MediaStore.Images.Media
-                    .getBitmap(this.getContentResolver(), imageUri);
-        } catch (Exception e){
-            Log.d(TAG, "Could not create image from URI");
-            return "";
-        }
-
-        bitmap = resizeIfTooLarge( bitmap );
-        bitmap = reorientImage( bitmap, imageUri );
-
-
-        // remove the set background on release. they are here for testing purposes
-//        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
-
-        ocr.setImage(bitmap);
-        Ocr.Result result = ocr.performOcr();
-
-//        bitmap = ocr.getImage();
-//        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
-
-        if ( !result.isValid ) {
-            Toast.makeText(this, "Ocr Failed", Toast.LENGTH_LONG).show();
-            return ""; // invalid text
-        } else {
-
-            // text cleaning specific to perusing
-            String text = result.text;
-            String[] words = text.split(" ");
-            text = "";
-
-            // remove bad characters per word
-            for ( int i = 0; i < words.length; ++i ) {
-                words[i] = words[i].replaceAll("[^a-zA-Z0-9]+", "");
-                text += words[i] + " ";
-            }
-            result.text = text;
-
-            Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
-        }
-
-        return result.text;
-    }
-
-    public void doOcrAndSpritz( Uri imageUri ) {
-
-        if ( imageUri == null )
-            return;
-
-        mText = doOcrGetText( imageUri );
-
-        ///  - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // then populate the edit text fragment with the text
-        // and let the user press the "Spritz" action in the action bar
-        int position = 3;
-        boolean isForceLoadSpritz = false;
-        Fragment fragment = PerusalEditTextFragment
-                .newInstance(position, mText, isForceLoadSpritz);
-
-        // update the main content by replacing fragments
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .commit();
-    }
 
 
     @Override
@@ -582,9 +379,19 @@ public class MainActivity extends Activity
 
         if (requestCode == CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
-                Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
+//                Toast.makeText(this, "Please wait a moment!", Toast.LENGTH_LONG).show();
                 Helpers.globalAppsMediaScanIntent( this, mImageUri.getPath() );
-                doOcrAndSpritz( mImageUri );
+//                doOcrAndSpritz( mImageUri );
+
+                Fragment fragment = PerusalEditTextFragment
+                        .newInstance(1, mImageUri, InputMethodState.IMAGE_SHARE );
+
+                // update the main content by replacing fragments
+                FragmentManager fragmentManager = getFragmentManager();
+                fragmentManager.beginTransaction()
+                        .replace(R.id.container, fragment)
+                        .commit();
+
             } else if (resultCode == RESULT_CANCELED) {
             } else {
             }
