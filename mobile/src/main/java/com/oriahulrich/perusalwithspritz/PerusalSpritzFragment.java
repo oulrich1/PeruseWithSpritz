@@ -110,10 +110,11 @@ public class PerusalSpritzFragment
         Log.d(TAG, "FRAGMENT newInstance");
 
         Bundle args = new Bundle();
-        args.putBoolean(ARG_SHOULD_SAVE, shouldSavePerusal); // should save new perusal if not already
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-        args.putString(ARG_SPRITZ_TEXT, textSpritz);         // url or text
-        args.putInt(ARG_MODE, mode);                         // URL or TEXT
+
+        args.putBoolean(ARG_SHOULD_SAVE, shouldSavePerusal); // should save new perusal if not already
+        args.putString(ARG_SPRITZ_TEXT, textSpritz);         // url or text value
+        args.putInt(ARG_MODE, mode);                         // URL or TEXT mode
 
         PerusalSpritzFragment fragment = new PerusalSpritzFragment();
         fragment.setArguments(args);
@@ -205,11 +206,12 @@ public class PerusalSpritzFragment
         SpritzSDK.getInstance().addLoginStatusChangeListener(this);
 
         if (mTextSpritz != null && !mTextSpritz.isEmpty()) {
-            doSpritzing( mTextSpritz );
             mShouldSavePerusal = getArguments().getBoolean(ARG_SHOULD_SAVE);
             if ( mShouldSavePerusal ) {
+                // will not create if already exists
                 createAddPerusalToDB(sqLiteDAO, mTextSpritz);
             }
+            doSpritzing( mTextSpritz );
         }
     }
 
@@ -297,6 +299,7 @@ public class PerusalSpritzFragment
 
     /// ---
 
+    // depending on arg_mode, text can be raw text or URL
     public boolean doSpritzing(String text) {
         boolean success = true;
 
@@ -304,8 +307,6 @@ public class PerusalSpritzFragment
             Log.d(TAG, "Spritz View is null..");
             return false;
         }
-
-        String testUrl = "http://sdk.spritzinc.com/sampleText/HelloWorld.html";
 
         String sampleMessage =  "Go back to perusal page, then paste " +
                                 "some text and hit the play button!";
@@ -315,8 +316,9 @@ public class PerusalSpritzFragment
             int mode = getArguments().getInt(ARG_MODE);
 
             if (mode == Perusal.Mode.URL.ordinal()) {
-                source = new UrlSpritzSource( text, Content.SelectorType.CSS, "p",
-                                              new Locale("en", "US") );
+                String cssSelectors = "p";
+                source = new UrlSpritzSource( text, Content.SelectorType.CSS,
+                                              cssSelectors, new Locale("en", "US") );
             } else if (mode == Perusal.Mode.TEXT.ordinal()) {
                 source = new SimpleSpritzSource( text, new Locale("en", "US") );
             } else {

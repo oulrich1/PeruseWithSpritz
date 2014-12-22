@@ -63,10 +63,10 @@ public class SQLiteDAO {
         Cursor cursor = sqLiteDatabase.rawQuery(duplicateCheckQuery, null);
 
         if (cursor != null && cursor.moveToFirst()) {
-            Toast.makeText(context, "Perusal is already in the list", Toast.LENGTH_LONG).show();
+//            Toast.makeText(context, "Perusal is already in the list", Toast.LENGTH_LONG).show();
             return null;
         } else if (perusalTitle.isEmpty()) {
-            Toast.makeText(context, "You must start Perusing!!", Toast.LENGTH_LONG).show();
+//            Toast.makeText(context, "You must start Perusing!!", Toast.LENGTH_LONG).show();
             return null;
         }
 

@@ -18,10 +18,19 @@ the url is saved. In that case, the title is set to the part after the web proto
 "http://" stuff in the url. (Maybe the app should just save the text and not the
 URL to prevent multiple spritz web scrapes?)
 
-## Todo:
-- PDF Support
+## Known Issues:
+- URL Link sharing opens the spritz fragment (through the 'peruse controller' aka edittext fragment) and the url is saved in a recent perusal item, but Spritz fails to load and "spritz" the url.. The current user workaround is to go to the recent perusals list and select the url just shared/added. then it works flawlessly. 
+
+## Todo
 - E-Pub Support
-- Perusal Sharing
-- Filtering for OCR
+- PDF Support
+	- share url to pdf/epub
+	- share pdf/epub
 - Wearable Spritz Views. If wearable is present, send text data to the watch instead on "Spritz"
+- Fix issues
+
+## Unicorns 
+- share url to image
+- Filtering for OCR
+- Perusal Sharing 
 

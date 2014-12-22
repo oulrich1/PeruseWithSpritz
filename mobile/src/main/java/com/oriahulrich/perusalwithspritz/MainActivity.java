@@ -101,18 +101,33 @@ public class MainActivity extends Activity
 
         mCameraDetected = Helpers.checkCameraHardware(this);
 
+        // init spritz first
+        try {
+            SpritzSDK.init(this,
+                    "a54c147382cb5ce21",
+                    "fa4157e0-b591-4183-a6fc-78f21a692dbf",
+                    "https://sdk.spritzinc.com/android/examples/login_success.html"
+            );
+            Log.d(TAG, "Spritz successfully initialized..");
+        } catch ( Exception e ) {
+            Log.d(TAG, "Spritz failed to init..");
+        }
+
         // initialize one and only DAO
         sqLiteDAO = new SQLiteDAO(this);
         sqLiteDAO.open();
 
         Log.d(TAG, " Native string: " + getStringFromNative());
 
-        // Get intent with the text: (1) raw text, (2) url, (3) image (TODO)
+        // Get intent with the text: (1) raw text, (2) url, (3) image
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
 
         m_doOcrAndSpritzAfterViewLoads = false;
+
+        // TODO: what if the user wants to spritz a PDF or EPUB..
+        // TODO: and they share it with the app. how should the app handle it
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equals(type)) {
@@ -148,17 +163,6 @@ public class MainActivity extends Activity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
-        // init spritz first
-        try {
-            SpritzSDK.init(this,
-                    "a54c147382cb5ce21",
-                    "fa4157e0-b591-4183-a6fc-78f21a692dbf",
-                    "https://sdk.spritzinc.com/android/examples/login_success.html"
-            );
-            Log.d(TAG, "Spritz successfully initialized..");
-        } catch ( Exception e ) {
-            Log.d(TAG, "Spritz failed to init..");
-        }
     }
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -169,16 +173,13 @@ public class MainActivity extends Activity
                 {
                     Log.d(TAG, "OpenCV loaded successfully");
 
+                    // TODO: ?
                     /// not sure if this is the right way to do this
                     /// but since we shouldnt ocr a shared image as soon
                     /// as it is sent but wait for loading to finish.
                     /// specifically, wait until the view is drawn AND
                     /// when opencv is loaded.. (at LEAST the latter)
-//                    if ( m_doOcrAndSpritzAfterViewLoads ) {
-//                        doDeferedOcrAndSpritzOnSharedImage();
-//                        m_doOcrAndSpritzAfterViewLoads = false;
-//                        return;
-//                    }
+
                 } break;
                 default:
                 {
@@ -199,7 +200,6 @@ public class MainActivity extends Activity
 //        }
     }
 
-    /** TODO */
     /* Expect the text to be a URL String */
     void handleSendText(Intent intent) {
         Log.d(TAG, "ACTIVITY handleSendText");
@@ -224,7 +224,6 @@ public class MainActivity extends Activity
         }
     }
 
-    /** TODO */
     /* Expect the image to contain text to be OCR'd */
     void handleSendImage(Intent intent) {
         Log.d(TAG, "ACTIVITY handleSendImage");
@@ -239,7 +238,6 @@ public class MainActivity extends Activity
         }
     }
 
-    /** TODO */
     /* Expect the image to contain text to be OCR'd */
     void handleSendMultipleImages(Intent intent) {
         Log.d(TAG, "ACTIVITY handleSendMultipleImages");

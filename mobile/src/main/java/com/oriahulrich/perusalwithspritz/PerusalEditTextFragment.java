@@ -141,6 +141,16 @@ public class PerusalEditTextFragment extends Fragment {
             }
         } else if ( inputMethod == MainActivity.InputMethodState.URL_SPRITZ.ordinal() ) {
             mURL = getArguments().getString(ARG_URL);
+
+            // TODO: if the url is actually to a picture image of some sort then
+            // download the image and do ocr functionality instead
+            // (1) check if the url ends in the known image formats..
+            // (2) just load the image and test its format
+            // leaning against (1) as its faster and might actually
+            // be cleaner code
+
+            // TODO: if the url is actually a pdf then think about that someday..
+
             // load the spritz fragment
             int textState = Perusal.Mode.URL.ordinal();
             navigateToSpritzFragment(textState, mURL);
@@ -234,10 +244,13 @@ public class PerusalEditTextFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
+    // given the text state -> msg can be either text or a url..
     private void navigateToSpritzFragment(int textState, String msg) {
         int peruseSectionNumber = 1; // force section nav number
+        boolean shouldAttemptSavePerusal = true;
         Fragment fragment = PerusalSpritzFragment
-                .newInstance(peruseSectionNumber, textState, msg, true);
+                .newInstance( peruseSectionNumber, textState,
+                              msg, shouldAttemptSavePerusal );
 
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
