@@ -10,6 +10,7 @@
 
     <!-- https://stackoverflow.com/questions/11285961/how-to-make-a-background-transparent-20-in-android -->
 
+
     <com.devspark.robototextview.widget.RobotoTextView
         android:id="@+id/recentPerusalItemTitle"
         android:layout_width="fill_parent"
@@ -19,6 +20,7 @@
         android:layout_marginLeft="18dp"
         android:paddingBottom="14dp"
         android:paddingTop="4dp"
+        android:textColor="@color/black"
         app:typeface="roboto_slab_regular"
         android:textSize="20sp" />
 

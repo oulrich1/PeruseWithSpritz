@@ -16,28 +16,16 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.RadioGroup;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.app.NotificationCompat.WearableExtender;
-
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.wearable.NodeApi;
-import com.google.android.gms.wearable.Wearable;
-import com.oriahulrich.perusalwithspritz.adapters.RecentPerusalsAdapter;
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
+import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 import com.spritzinc.android.SimpleSpritzSource;
 import com.spritzinc.android.SpritzSource;
 import com.spritzinc.android.UrlSpritzSource;
 import com.spritzinc.android.sdk.SpritzSDK;
-import com.spritzinc.android.sdk.SpritzUser;
 import com.spritzinc.android.sdk.view.SpritzBaseView;
 import com.spritzinc.android.sdk.view.SpritzControlView;
 import com.spritzinc.android.sdk.view.SpritzFullControlView;
@@ -47,8 +35,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.xml.datatype.Duration;
 
 /**
  * A fragment for holding the Spritzing view (used only after accepting

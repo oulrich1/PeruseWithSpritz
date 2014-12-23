@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.oriahulrich.perusalwithspritz.lib.Ocr;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
@@ -291,7 +292,7 @@ public class PerusalEditTextFragment extends Fragment {
         }
 
         int maxDimLength = 1000;
-        bitmap = Helpers.resizeIfTooLarge( bitmap, maxDimLength );
+        bitmap = Helpers.resizeIfTooLarge(bitmap, maxDimLength);
         bitmap = Helpers.reorientImage( bitmap, imageUri );
 
         // remove the set background on release. they are here for testing purposes

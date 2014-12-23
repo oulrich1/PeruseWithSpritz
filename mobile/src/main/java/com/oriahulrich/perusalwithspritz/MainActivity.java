@@ -6,19 +6,10 @@ import android.app.Activity;
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,20 +18,18 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 
 // library includes
+import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.spritzinc.android.sdk.SpritzSDK;
 
 // local project includes
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
-import com.oriahulrich.perusalwithspritz.lib.Ocr;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.engine.OpenCVEngineInterface;
 
 
 public class MainActivity extends Activity
@@ -304,6 +293,8 @@ public class MainActivity extends Activity
         Uri epubUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (epubUri != null) {
             Log.d(TAG, " .. epub uri is valid!");
+            // epub doesnt seem to be trivial to parse..
+            // http://www.codeproject.com/Articles/592909/EPUB-Viewer-for-Android-with-Text-to-Speech
             Toast.makeText( this,
                     "Epub is on it's way to being implemented",
                     Toast.LENGTH_LONG).show();

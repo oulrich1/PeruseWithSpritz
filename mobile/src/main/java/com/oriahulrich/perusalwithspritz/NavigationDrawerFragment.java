@@ -19,9 +19,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
+
+import com.oriahulrich.perusalwithspritz.adapters.NavigationDrawerAdapter;
+import com.oriahulrich.perusalwithspritz.pojos.NavDrawerItem;
+
+import java.util.ArrayList;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -98,6 +101,48 @@ public class NavigationDrawerFragment extends Fragment {
         setHasOptionsMenu(true);
     }
 
+
+    /// --- Adapter initializer helpers --- ///
+
+    String[] getDrawerItemTitles() {
+        String[] titles = new String[]{
+                getString(R.string.title_section1),
+                getString(R.string.title_section2),
+                getString(R.string.title_section3),
+        };
+
+        return titles;
+    }
+
+    int[] getDrawerItemIconIds() {
+        int[] iconIds = new int[] {
+                R.drawable.ic_peruse_book,
+                R.drawable.ic_peruse_recent,
+                R.drawable.ic_peruse_ocr,
+        };
+        return iconIds;
+    }
+
+    ArrayList<NavDrawerItem> getDrawerItems() {
+        ArrayList<NavDrawerItem> navDrawerItems
+                = new ArrayList<NavDrawerItem>();
+
+        int[] iconIds = getDrawerItemIconIds();
+        String[] titles = getDrawerItemTitles();
+
+        // initialize array list for the adapter
+        for (int i = 0; i < titles.length; ++i) {
+            navDrawerItems.add(new NavDrawerItem(
+                    titles[i], iconIds[i]
+            ));
+        }
+
+        return navDrawerItems;
+    }
+
+    /// --- End adapter initializers --- ///
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
@@ -110,15 +155,22 @@ public class NavigationDrawerFragment extends Fragment {
                 selectItem(position);
             }
         });
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
+
+//        mDrawerListView.setAdapter(new ArrayAdapter<String>(
+//                getActionBar().getThemedContext(),
+//                R.layout.list_item_drawer,
+//                R.id.list_item_drawer_text1,
+//                new String[]{
+//                        getString(R.string.title_section1),
+//                        getString(R.string.title_section2),
+//                        getString(R.string.title_section3),
+//                }));
+
+        mDrawerListView.setAdapter(new NavigationDrawerAdapter(
                 getActionBar().getThemedContext(),
-                android.R.layout.simple_list_item_activated_1,
-                android.R.id.text1,
-                new String[]{
-                        getString(R.string.title_section1),
-                        getString(R.string.title_section2),
-                        getString(R.string.title_section3),
-                }));
+                getDrawerItems()
+        ));
+
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }

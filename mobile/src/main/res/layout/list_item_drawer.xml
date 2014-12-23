@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/selector"
+    >
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:weightSum="5"
+            >
+
+            <ImageView
+                android:id="@+id/list_item_drawer_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10sp"
+                android:layout_marginRight="10sp"
+                android:gravity="center_vertical"
+                android:layout_weight="1"
+                />
+
+            <com.devspark.robototextview.widget.RobotoTextView
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/list_item_drawer_text1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#ff191714"
+                android:textSize="20sp"
+                app:typeface="roboto_slab_regular"
+                android:gravity="left|center_vertical"
+                android:layout_marginLeft="10dp"
+                android:minHeight="50sp"
+                android:layout_weight="4"
+                />
+            <!--android:gravity="center_vertical"-->
+
+        </TableRow>
+    </TableLayout>
+
+
+</LinearLayout>

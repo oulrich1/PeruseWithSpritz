@@ -1,4 +1,4 @@
-package com.oriahulrich.perusalwithspritz;
+package com.oriahulrich.perusalwithspritz.lib;
 
 import android.content.Context;
 import android.content.Intent;
