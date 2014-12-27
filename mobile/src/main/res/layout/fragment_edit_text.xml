@@ -15,4 +15,5 @@
         android:hint="Paste Text Here!"
         android:editable="true"
         android:layout_gravity="center_horizontal" />
+
 </LinearLayout>

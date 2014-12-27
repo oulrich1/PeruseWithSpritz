@@ -18,9 +18,19 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+//import com.github.amlcurran.showcaseview.ApiUtils;
+//import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
+//import com.github.amlcurran.showcaseview.ShowcaseView;
+//import com.github.amlcurran.showcaseview.targets.ViewTarget;
+import com.github.amlcurran.showcaseview.ApiUtils;
+import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
+import com.github.amlcurran.showcaseview.ShowcaseView;
+import com.github.amlcurran.showcaseview.targets.ViewTarget;
 import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.oriahulrich.perusalwithspritz.lib.Ocr;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
@@ -58,6 +68,8 @@ public class PerusalEditTextFragment extends Fragment {
 
     // note: not related to inputMEthodState
     private int mUsageState; // for fun (what usage message shall we show?!)
+
+//    private ShowcaseView sv;
 
 
     /**
@@ -326,6 +338,7 @@ public class PerusalEditTextFragment extends Fragment {
 
         return result.text;
     }
+
 
 }
 

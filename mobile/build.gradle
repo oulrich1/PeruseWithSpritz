@@ -88,7 +88,6 @@ android {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
     }
-
 }
 
 
@@ -100,4 +99,7 @@ dependencies {
     compile 'com.spritzinc.android:spritz-sdk:1.1.+'
     compile 'com.github.johnkil.android-robototextview:robototextview:2.2.0'
     compile project(':Libraries:opencv')
+    compile 'com.github.amlcurran.showcaseview:library:5.0.0'
+    compile files('libs/epublib-core-latest.jar')
+//    compile files('libs/slf4j-android-1.6.1-RC1.jar')
 }

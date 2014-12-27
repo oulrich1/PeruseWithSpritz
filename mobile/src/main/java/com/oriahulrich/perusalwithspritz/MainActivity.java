@@ -7,6 +7,9 @@ import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,13 +17,31 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Map;
 
 // library includes
+//import com.github.amlcurran.showcaseview.ApiUtils;
+//import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
+//import com.github.amlcurran.showcaseview.ShowcaseView;
+//import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
+//import com.github.amlcurran.showcaseview.targets.ViewTarget;
+import com.github.amlcurran.showcaseview.ShowcaseView;
+import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
+import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
+import com.github.amlcurran.showcaseview.targets.ViewTarget;
 import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.spritzinc.android.sdk.SpritzSDK;
 
@@ -31,6 +52,20 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 
+import nl.siegmann.epublib.domain.Book;
+import nl.siegmann.epublib.domain.Resource;
+import nl.siegmann.epublib.domain.Resources;
+import nl.siegmann.epublib.epub.EpubReader;
+
+// siegmann epublib: http://www.siegmann.nl/epublib/android
+//import nl.siegmann.epublib.domain.Book;
+//import nl.siegmann.epublib.domain.TOCReference;
+//import nl.siegmann.epublib.epub.EpubReader;
+//import org.slf4j.LoggerFactory;
+
+
+
+// inspiration : http://www.pageturner-reader.org/
 
 public class MainActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -53,6 +88,8 @@ public class MainActivity extends Activity
     // database instance shared with spritz and recentperusals fragments
     private SQLiteDAO    sqLiteDAO;
 
+//    private ShowcaseView sv;
+
     // used to identify this class
     static private String TAG = "Main Activity";
 
@@ -61,13 +98,17 @@ public class MainActivity extends Activity
         TEXT_EDIT,
         URL_SPRITZ,
         IMAGE_SHARE,
+        READ_EPUB
     }
 
-    // argument to the webview fragment
+    // argument to the web view fragment
     private String mURL;
 
     // argument to the edit text fragment
     private String mText;
+
+    // argument to the epub fragment
+    private Book mBook;
 
     // arguments to the ocr functionality //
     private boolean mCameraDetected;
@@ -120,7 +161,7 @@ public class MainActivity extends Activity
         m_doOcrAndSpritzAfterViewLoads = false;
 
         // TODO: what if the user wants to spritz a PDF or EPUB..
-        // TODO: and they share it with the app. how should the app handle it
+        // pdf might not be as easy as epub.. checkout epublib
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equals(type)) {
@@ -155,6 +196,39 @@ public class MainActivity extends Activity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
+        // https://github.com/amlcurran/ShowcaseView
+        if ( Helpers.checkAppStart(this) == Helpers.AppStart.FIRST_TIME) {
+//            ActionItemTarget target = new ActionItemTarget(this, R.id.action_perform_spritz_on_text);
+//            ShowcaseView sv = new ShowcaseView.Builder(this)
+//                    .setTarget(target)
+//                    .setContentTitle("Press to 'Spritz'")
+//                    .setContentText("")
+//                    .hideOnTouchOutside()
+//                    .build();
+//            sv.show();
+        }
+    }
+
+    private Book parseEPUB(String path) {
+        AssetManager assetManager = getAssets();
+
+        Book book = null;
+
+        try {
+            // find InputStream for book
+            // InputStream epubInputStream = assetManager.open(path);
+            InputStream epubInputStream = new URL(path).openStream();
+
+            // Load Book from inputStream
+            book = (new EpubReader()).readEpub(epubInputStream);
+            if ( book != null ) {
+                Log.i("epublib", "title: " + book.getTitle());
+            }
+        } catch (IOException e) {
+            Log.e("epublib", e.getMessage());
+        }
+
+        return book;
     }
 
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
@@ -186,9 +260,18 @@ public class MainActivity extends Activity
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
         Log.d(TAG, "onResume");
+//
+//        ShowcaseView showcaseView = (new ShowcaseView.Builder(this))
+//                .setTarget(new ActionViewTarget(this, ActionViewTarget.Type.HOME))
+//                .setContentTitle("ShowcaseView")
+//                .setContentText("This is highlighting the Home button")
+//                .hideOnTouchOutside()
+//                .build();
 
 
         /// TODO: the following assumes API level 20 (min was 15, but cur set to 20)
+        // to do : wearables
+
 
 //        /** Sample Notification - creating an intent for wearable  */
 //        Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -293,11 +376,35 @@ public class MainActivity extends Activity
         Uri epubUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (epubUri != null) {
             Log.d(TAG, " .. epub uri is valid!");
-            // epub doesnt seem to be trivial to parse..
-            // http://www.codeproject.com/Articles/592909/EPUB-Viewer-for-Android-with-Text-to-Speech
             Toast.makeText( this,
                     "Epub is on it's way to being implemented",
                     Toast.LENGTH_LONG).show();
+
+            // get ready to go into "read text" mode. The text source
+            // is not from a url, or raw text really, its kind of in between.
+            // in the sense we still need to parse the text from the epub
+            // but we will use spritz as if we have raw text..
+            // todo: handle just in time book parsing to read text and
+            // populate the spritz reader with the text
+            mText = "";
+            mInputMethodState = InputMethodState.TEXT_EDIT;
+
+            // parse the epub
+            String urlString = epubUri.toString();
+            Book book = parseEPUB( urlString );
+
+            if ( book != null ) {
+                // then open up the epub viewing fragment from which
+                // selections of the epub could be spritzed
+                mBook = book;
+                mInputMethodState = InputMethodState.READ_EPUB;
+                Toast.makeText(this,
+                               "about to open E-PUB! '" + book.getTitle().toString() +  "'",
+                               Toast.LENGTH_LONG).show();
+            } else {
+                // when spritz fragment is decided upon, just open up the raw text edit fragment
+                Toast.makeText(this, "e-pub could not be opened, sorry.", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -366,7 +473,10 @@ public class MainActivity extends Activity
         } else if ( mInputMethodState == InputMethodState.TEXT_EDIT ) {
             // the user shared raw text..
             fragment = PerusalEditTextFragment
-                    .newInstance(position + 1, mText, mInputMethodState );
+                    .newInstance(position + 1, mText, mInputMethodState);
+        } else if ( mInputMethodState == InputMethodState.READ_EPUB ) {
+            fragment = PerusalEpubFragment
+                    .newInstance(position + 1, mBook, mInputMethodState);
         } else {
             // error
             fragment = new Fragment();
