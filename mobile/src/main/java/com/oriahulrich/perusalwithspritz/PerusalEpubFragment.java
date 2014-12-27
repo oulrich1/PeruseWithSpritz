@@ -11,12 +11,20 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
+import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Map;
 
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.domain.Resources;
+import nl.siegmann.epublib.domain.Spine;
+import nl.siegmann.epublib.domain.SpineReference;
 
 /**
  *  The user should be able to share e-pubs with the app. When the epub is shared
@@ -38,7 +46,9 @@ public class PerusalEpubFragment extends Fragment {
     static private String TAG = "Epub Controller Fragment";
 
     // the book from which to read
-    Book mBook;
+    Book     mBook;
+    WebView  mWebView;
+    TextView mTextView;
 
     /**
      * Returns a new instance of this fragment for the given section
@@ -69,20 +79,69 @@ public class PerusalEpubFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_epub_view, container, false);
         setHasOptionsMenu(true);
 
+        mWebView = (WebView) rootView.findViewById(R.id.epubWebView);
+//        mTextView = (TextView) rootView.findViewById(R.id.epubTextView);
         mBook = (Book) getArguments().getSerializable(ARG_BOOK);
 
-        // https://github.com/psiegman/epublib/blob/master/epublib-
-        // tools/src/test/java/nl/siegmann/epublib/search/SearchIndexTest.java
-        // mText = book.getTableOfContents().getTocReferences().toString();
-
-        // resources contain all of the content of the book
-        Resources resources = mBook.getResources();
-
-        // the inner data structure that holds the content
-        Map<String, Resource> resourceMap = resources.getResourceMap();
+        if ( mBook != null ) {
+            onCreateEpubView( mBook );
+        }
 
         return rootView;
     }
+
+    private void onCreateEpubView( Book book ) {
+        if ( book == null )
+            return;
+
+        // get the contents and append them to the views
+        String chapter = getChapter(book, -1);
+        int chapterLength = chapter.length();
+
+        if ( mWebView != null ) {
+            mWebView.loadData( chapter, "text/html", "utf-8" );
+        }
+
+//        if ( mTextView != null ) {
+//            int count = book.getSpine().getSpineReferences().size();
+//            mTextView.setText(Integer.toString(count));
+//        }
+    }
+
+    private String getChapter( Book book, int chapterIdx ) {
+        // https://github.com/psiegman/epublib/blob/master/epublib-
+        // tools/src/test/java/nl/siegmann/epublib/search/SearchIndexTest.java
+        // mText = book.getTableOfContents().getTocReferences().toString();
+//        Resources resources = book.getResources();
+//        Map<String, Resource> resourceMap = resources.getResourceMap();
+        Spine spine = book.getSpine();
+        List<SpineReference> spineList = spine.getSpineReferences() ;
+        int count = spineList.size();
+
+        String line;
+        String allLines = "";
+
+        StringBuilder strBuilder = new StringBuilder();
+        for (int i = 0; count > i; i++) {
+            Resource res = spine.getResource(i);
+            try {
+                InputStream is = res.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                try {
+                    while ((line = reader.readLine()) != null) {
+                        allLines = strBuilder.append(line).append("\n").toString();
+                    }
+                } catch (IOException e) {e.printStackTrace();}
+
+                //do something with stream
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return allLines;
+    }
+
 
     @Override
     public void onResume() {
