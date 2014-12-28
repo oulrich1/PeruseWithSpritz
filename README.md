@@ -23,6 +23,8 @@ URL to prevent multiple spritz web scrapes?)
 
 ## Todo
 - E-Pub Support
+- Feature to change font type for reading purposes
+- seperate text catagories: text, url, epub, images
 - PDF Support
 	- share url to pdf/epub
 	- share pdf/epub
