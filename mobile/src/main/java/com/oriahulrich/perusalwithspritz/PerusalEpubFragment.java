@@ -2,16 +2,27 @@ package com.oriahulrich.perusalwithspritz;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.renderscript.Element;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.oriahulrich.perusalwithspritz.pojos.Perusal;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Node;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -76,7 +87,9 @@ public class PerusalEpubFragment extends Fragment {
                              Bundle savedInstanceState) {
 
         Log.d(TAG, "FRAGMENT onCreateView");
-        View rootView = inflater.inflate(R.layout.fragment_epub_view, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_epub_view,
+                            container, false);
+
         setHasOptionsMenu(true);
 
         mWebView = (WebView) rootView.findViewById(R.id.epubWebView);
@@ -84,7 +97,7 @@ public class PerusalEpubFragment extends Fragment {
         mBook = (Book) getArguments().getSerializable(ARG_BOOK);
 
         if ( mBook != null ) {
-            onCreateEpubView( mBook );
+            onCreateEpubView(mBook);
         }
 
         return rootView;
@@ -126,10 +139,15 @@ public class PerusalEpubFragment extends Fragment {
             Resource res = spine.getResource(i);
             try {
                 InputStream is = res.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                BufferedReader reader = new BufferedReader(
+                                            new InputStreamReader(is)
+                                        );
                 try {
                     while ((line = reader.readLine()) != null) {
-                        allLines = strBuilder.append(line).append("\n").toString();
+                        allLines = strBuilder
+                                    .append(line)
+                                    .append("\n")
+                                    .toString();
                     }
                 } catch (IOException e) {e.printStackTrace();}
 
@@ -154,6 +172,49 @@ public class PerusalEpubFragment extends Fragment {
         Log.d(TAG, "onCreateOptionsMenu");
         inflater.inflate(R.menu.edit_text_and_selection, menu);
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, "FRAGMENT onOptionsItemSelected");
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_perform_spritz_on_text) {
+            Toast.makeText( getActivity(),
+                            "Reading all text..",
+                            Toast.LENGTH_LONG ).show();
+
+            // arguments to the spritz fragment
+            int textState = Perusal.Mode.TEXT.ordinal();
+            String text = "";
+
+            // parse the book, "quickleee"
+            String chapter = getChapter( mBook, -1 );
+            Document htmlDoc = Jsoup.parse(chapter);
+            Elements els = htmlDoc.select("p");
+            for (org.jsoup.nodes.Element el : els) {
+                // only use inner text if it is a leaf paragraph
+                // node (reason: assumed to be the only type that
+                // contains book text)
+                if ( el.children().size() == 0
+                      && el.hasText() )
+                {
+                    text += el.text();
+                    // just in case each line does not
+                    // have a new line or seperator
+                    text += " ";
+                }
+            }
+
+            ((MainActivity)getActivity())
+                    .navigateToSpritzFragment(textState, text);
+
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     @Override
     public void onAttach(Activity activity) {

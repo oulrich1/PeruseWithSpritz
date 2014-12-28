@@ -118,7 +118,7 @@
     <orderEntry type="library" exported="" name="jackson-databind-2.2.3" level="project" />
     <orderEntry type="library" exported="" name="api-client-1.0.5" level="project" />
     <orderEntry type="library" exported="" name="spritz-engine-common-1.0.10" level="project" />
-    <orderEntry type="library" exported="" name="slf4j-android-1.6.1-RC1" level="project" />
+    <orderEntry type="library" exported="" name="jsoup-1.8.1" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.1" level="project" />
     <orderEntry type="module" module-name="opencv" exported="" />
   </component>

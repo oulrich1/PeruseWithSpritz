@@ -167,7 +167,8 @@ public class PerusalEditTextFragment extends Fragment {
 
             // load the spritz fragment
             int textState = Perusal.Mode.URL.ordinal();
-            navigateToSpritzFragment(textState, mURL);
+            ((MainActivity)getActivity()).
+                    navigateToSpritzFragment(textState, mURL);
 
         } else if ( inputMethod == MainActivity.InputMethodState.IMAGE_SHARE.ordinal() ) {
             mUri = getArguments().getParcelable(ARG_URI);
@@ -188,7 +189,8 @@ public class PerusalEditTextFragment extends Fragment {
             }
 
             int textState = Perusal.Mode.TEXT.ordinal();
-            navigateToSpritzFragment(textState, mText);
+            ((MainActivity)getActivity())
+                    .navigateToSpritzFragment(textState, mText);
         }
     }
 
@@ -251,27 +253,29 @@ public class PerusalEditTextFragment extends Fragment {
             }
 
             int textState = Perusal.Mode.TEXT.ordinal();
-            navigateToSpritzFragment(textState, mText);
+            ((MainActivity)getActivity())
+                .navigateToSpritzFragment(textState, mText);
 
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    // given the text state -> msg can be either text or a url..
-    // NOTE: this is the only entry point to spritzing.. just FYI
-    private void navigateToSpritzFragment(int textState, String msg) {
-        int peruseSectionNumber = 1; // force section nav number
-        boolean shouldAttemptSavePerusal = true;
-        Fragment fragment = PerusalSpritzFragment
-                .newInstance( peruseSectionNumber, textState,
-                        msg, shouldAttemptSavePerusal );
 
-        FragmentManager fragmentManager = getFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, fragment)
-                .commit();
-    }
+//    // given the text state -> msg can be either text or a url..
+//    // NOTE: this is the only entry point to spritzing.. just FYI
+//    private void navigateToSpritzFragment(int textState, String msg) {
+//        int peruseSectionNumber = 1; // force section nav number
+//        boolean shouldAttemptSavePerusal = true;
+//        Fragment fragment = PerusalSpritzFragment
+//                .newInstance( peruseSectionNumber, textState,
+//                        msg, shouldAttemptSavePerusal );
+//
+//        FragmentManager fragmentManager = getFragmentManager();
+//        fragmentManager.beginTransaction()
+//                .replace(R.id.container, fragment)
+//                .commit();
+//    }
 
     @Override
     public void onAttach(Activity activity) {

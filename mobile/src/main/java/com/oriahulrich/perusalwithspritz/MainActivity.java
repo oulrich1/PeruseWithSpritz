@@ -376,9 +376,6 @@ public class MainActivity extends Activity
         Uri epubUri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
         if (epubUri != null) {
             Log.d(TAG, " .. epub uri is valid!");
-            Toast.makeText( this,
-                    "Epub is on it's way to being implemented",
-                    Toast.LENGTH_LONG).show();
 
             // get ready to go into "read text" mode. The text source
             // is not from a url, or raw text really, its kind of in between.
@@ -399,7 +396,7 @@ public class MainActivity extends Activity
                 mBook = book;
                 mInputMethodState = InputMethodState.READ_EPUB;
                 Toast.makeText(this,
-                               "about to open E-PUB! '" + book.getTitle().toString() +  "'",
+                               "'" + book.getTitle().toString() +  "'",
                                Toast.LENGTH_LONG).show();
             } else {
                 // when spritz fragment is decided upon, just open up the raw text edit fragment
@@ -657,6 +654,22 @@ public class MainActivity extends Activity
         }
         return super.onOptionsItemSelected(item);
     }
+
+    // given the text state -> msg can be either text or a url..
+    // NOTE: this is the only entry point to spritzing.. just FYI
+    public void navigateToSpritzFragment(int textState, String msg) {
+        int peruseSectionNumber = 1; // force section nav number
+        boolean shouldAttemptSavePerusal = true;
+        Fragment fragment = PerusalSpritzFragment
+                .newInstance( peruseSectionNumber, textState,
+                        msg, shouldAttemptSavePerusal );
+
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
+    }
+
 
 
     public native String getStringFromNative();

@@ -101,5 +101,6 @@ dependencies {
     compile project(':Libraries:opencv')
     compile 'com.github.amlcurran.showcaseview:library:5.0.0'
     compile files('libs/epublib-core-latest.jar')
-//    compile files('libs/slf4j-android-1.6.1-RC1.jar')
+    //    compile files('libs/slf4j-android-1.6.1-RC1.jar')
+    compile files('libs/jsoup-1.8.1.jar')
 }
