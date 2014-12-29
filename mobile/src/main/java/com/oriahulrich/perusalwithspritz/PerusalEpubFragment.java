@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.renderscript.Element;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -94,10 +95,10 @@ public class PerusalEpubFragment extends Fragment {
     }
 
     // list of pages fom which we can move about and extract the text at runtime
-    ArrayList<Page> mPages;
+    private static ArrayList<Page> mPages;
 
     // keeps track of which "page" we are viewing
-    int mCurPageIdx;
+    private static int mCurPageIdx;
 
     /**
      * For getting the content of the book, it takes a while
@@ -142,7 +143,9 @@ public class PerusalEpubFragment extends Fragment {
 
     public PerusalEpubFragment() {
         mBook = null;
-        mPages = new ArrayList<Page>();
+        if ( mPages == null ) {
+            mPages = new ArrayList<Page>();
+        }
     }
 
 
@@ -212,7 +215,7 @@ public class PerusalEpubFragment extends Fragment {
 
         // perform the book processing (to get the first
         // first pages) right away if possible
-        if ( mBook != null ) {
+        if ( mBook != null && mPages.size() == 0 ) {
 //            mBookProcessingThread.start();
 
             // initialize the first page offset to the
@@ -224,8 +227,6 @@ public class PerusalEpubFragment extends Fragment {
             mPages.clear();
             mPages.add(bookPage);
             mCurPageIdx = 0;
-
-            updateWebView();
         }
 
         return rootView;
@@ -235,6 +236,7 @@ public class PerusalEpubFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        updateWebView();
 
         // before we update the web view with
         // the text we need to know for sure
@@ -415,8 +417,17 @@ public class PerusalEpubFragment extends Fragment {
             }
         }
 
-        ((MainActivity)getActivity())
-                .navigateToSpritzFragment(textState, text);
+        int peruseSectionNumber = 1; // force section nav number
+        boolean shouldAttemptSavePerusal = true;
+        Fragment fragment = PerusalSpritzFragment
+                .newInstance( peruseSectionNumber, textState,
+                        text, shouldAttemptSavePerusal );
+
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, fragment)
+//                .addToBackStack("SpritzToEpub")
+                .commit();
     }
 
 
