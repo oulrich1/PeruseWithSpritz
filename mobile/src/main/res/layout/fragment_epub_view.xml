@@ -40,7 +40,6 @@
                 android:id="@+id/nextPageButton"
                 android:layout_weight="1"
                 android:nestedScrollingEnabled="false" />
-
         </TableRow>
         </TableLayout>
 

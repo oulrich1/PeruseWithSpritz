@@ -342,7 +342,7 @@ public class PerusalEpubFragment extends Fragment {
         }
 
         // Build a new "Page" for keeping track of the pages
-        // read so far and where to start reading pages
+        // read so far and where to start reading next pages
 
         Page page = new Page();
         page.text = strBuilder.toString();
@@ -370,7 +370,53 @@ public class PerusalEpubFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         Log.d(TAG, "onCreateOptionsMenu");
+        inflater.inflate(R.menu.epub_settings, menu);
         inflater.inflate(R.menu.edit_text_and_selection, menu);
+    }
+
+
+    // using jsoup to parse the current page's text, which
+    // is actually HTML. The parse returns the text content
+    // of the selector given.. Then, with the text, navigates
+    // to the spritzing fragment.. Spritzes on Text
+    private void parseTextFromHtmlAndDoSpritzing(String selector) {
+
+        String curTextHtml = getCurrentText();
+
+        if ( curTextHtml.isEmpty() ) {
+            Toast.makeText( getActivity(),
+                    "There is no text..",
+                    Toast.LENGTH_LONG ).show();
+            return;
+        }
+
+        // arguments to the spritz fragment
+        int textState = Perusal.Mode.TEXT.ordinal();
+        String text = "";
+
+        // parse the book, "quickleee"
+        // String chapter = getBookContentXmlString( mBook, -1 );
+        Document htmlDoc = Jsoup.parse(curTextHtml);
+        Elements els = htmlDoc.select(selector);
+        for (org.jsoup.nodes.Element el : els) {
+
+            // only use inner text if it is a leaf paragraph
+            // node (reason: assumed to be the only type that
+            // contains book text) (Update: this assumption
+            // does not hold)
+            // if ( el.children().size() == 0 )
+
+            if ( el.hasText() )
+            {
+                text += el.text();
+                // just in case each line does not
+                // have a new line or seperator
+                text += " ";
+            }
+        }
+
+        ((MainActivity)getActivity())
+                .navigateToSpritzFragment(textState, text);
     }
 
 
@@ -382,41 +428,14 @@ public class PerusalEpubFragment extends Fragment {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_perform_spritz_on_text) {
-
-            String curTextHtml = getCurrentText();
-
-            if ( curTextHtml.isEmpty() ) {
-                Toast.makeText( getActivity(),
-                                "There is no text..",
-                                Toast.LENGTH_LONG ).show();
-                return true;
-            }
-
-            // arguments to the spritz fragment
-            int textState = Perusal.Mode.TEXT.ordinal();
-            String text = "";
-
-            // parse the book, "quickleee"
-            // String chapter = getBookContentXmlString( mBook, -1 );
-            Document htmlDoc = Jsoup.parse(curTextHtml);
-            Elements els = htmlDoc.select("p");
-            for (org.jsoup.nodes.Element el : els) {
-                // only use inner text if it is a leaf paragraph
-                // node (reason: assumed to be the only type that
-                // contains book text)
-                if ( el.children().size() == 0
-                      && el.hasText() )
-                {
-                    text += el.text();
-                    // just in case each line does not
-                    // have a new line or seperator
-                    text += " ";
-                }
-            }
-
-            ((MainActivity)getActivity())
-                    .navigateToSpritzFragment(textState, text);
-
+            // select text from paragraph tags
+            parseTextFromHtmlAndDoSpritzing("p");
+            return true;
+        } else if (id == R.id.action_epub_settings) {
+            String msg = "Not implemented yet. TODO: give the user ability to: " +
+                         "(1) change words per group, (2) fontsize, (3) html " +
+                         "selector tags.";
+            Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
             return true;
         }
         return super.onOptionsItemSelected(item);
