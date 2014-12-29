@@ -293,7 +293,7 @@ public class PerusalEpubFragment extends Fragment {
         int i;  // we need to know which res the reader stopped
         for ( i = offset.startResId;
               i < count && lineCount < maxLines;
-              i++)
+              i++ )
         {
             Resource res = spine.getResource(i);
             InputStream is = null;
@@ -346,9 +346,10 @@ public class PerusalEpubFragment extends Fragment {
         page.startResId = offset.startResId;
         page.startCharIdx = offset.startCharIdx;
 
-        // iteration stopped at i-th spine resource and num chars
-        page.stopResId = i;
-        if ( i == offset.startResId ) {
+        // iteration stopped at (i-1)-th spine resource and num chars
+        // (assuming the loop is never broken out of before i is updated..
+        page.stopResId = i-1;
+        if ( page.stopResId == offset.startResId ) {
             // then same page.. get the total chars recieved
             page.stopCharIdx = page.text.length() + page.startCharIdx;
         } else {
