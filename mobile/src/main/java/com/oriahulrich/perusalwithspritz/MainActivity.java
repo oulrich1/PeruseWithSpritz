@@ -168,9 +168,12 @@ public class MainActivity extends Activity
                 handleSendText(intent); // Handle text being sent
             } else if (type.startsWith("image/")) {
                 handleSendImage(intent); // Handle single image being sent
-            } else if (type.startsWith("application/epub+zip")) {
+            } else if ( "*/*".equals(type)
+                        || type.startsWith("application/epub+zip")) {
                 Log.d(TAG, "We have recieved an epub.");
                 handleSendEpub(intent);
+            } else {
+                handleDefaultIntent(intent);
             }
         } else {
             // Handle other intents, such as being started from the home screen
@@ -391,7 +394,8 @@ public class MainActivity extends Activity
             Book book = parseEPUB( urlString );
 
             if ( book != null ) {
-                // then open up the epub viewing fragment from which
+                // then o
+                // pen up the epub viewing fragment from which
                 // selections of the epub could be spritzed
                 mBook = book;
                 mInputMethodState = InputMethodState.READ_EPUB;
