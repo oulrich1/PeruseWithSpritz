@@ -2,6 +2,7 @@
 ### Made with simplicity in mind to efficiently read with Spritz.
 
 ## Functionality 
+- Users can share e-pubs from the FS to the app.
 - Users can share text or URL data via another app through share intents.
 - Users can therefore open up a web page, highlight some text and share that text with the app.
 - It provides a text fragment in which the user can paste or type text to spritz.
@@ -20,16 +21,18 @@ URL to prevent multiple spritz web scrapes?)
 
 ## Known Issues:
 - URL Link sharing opens the spritz fragment (through the 'peruse controller' aka edittext fragment) and the url is saved in a recent perusal item, but Spritz fails to load and "spritz" the url.. The current user workaround is to go to the recent perusals list and select the url just shared/added. then it works flawlessly. 
+- Main activity: Choosing intent assumes "*/*" intent type is for e-pubs, should just be "application/epub+zip". On phone and simulator, sharing/sending epub from filesystem with the app created an intent with type "*/*". unexpected..
+- E-Pub UI is plain. ( Buttons or no buttons? Swipey views! )
+- Text from an e-pub "page" is saved to recent list when Spritzed. Subject to change.
+- Canceling camera during ocr causes app to crash..
 
 ## Todo
-- E-Pub Support
-- Feature to change font type for reading purposes
-- seperate text catagories: text, url, epub, images
-- PDF Support
-	- share url to pdf/epub
-	- share pdf/epub
 - Wearable Spritz Views. If wearable is present, send text data to the watch instead on "Spritz"
+- Feature to change font type for reading purposes
+- PDF Support
+- seperate text catagories: text, url, epub, images
 - Fix issues
+- Share URL to epub, pdf
 
 ## Unicorns 
 - share url to image
