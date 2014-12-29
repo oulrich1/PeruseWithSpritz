@@ -244,7 +244,13 @@ public class PerusalEpubFragment extends Fragment {
 //        } catch (Exception e) {
 //            Log.d(TAG, "Thread join failed: " + e.getMessage());
 //        }
+    }
 
+    // returns the text associated to the current page
+    private String getCurrentText() {
+        if ( mCurPageIdx < 0 || mCurPageIdx >= mPages.size() )
+            return ""; // out of range( this should NEVER happen )
+        return mPages.get(mCurPageIdx).text;
     }
 
     private void updateWebView() {
@@ -255,8 +261,7 @@ public class PerusalEpubFragment extends Fragment {
              && (mPages.size() > mCurPageIdx) )
         {
             // load ONE page, current page into the web view
-            mWebView.loadData( mPages.get(mCurPageIdx).text,
-                               "text/html", "utf-8" );
+            mWebView.loadData( getCurrentText(), "text/html", "utf-8" );
         }
     }
 
@@ -378,16 +383,14 @@ public class PerusalEpubFragment extends Fragment {
         int id = item.getItemId();
         if (id == R.id.action_perform_spritz_on_text) {
 
-            if ( mBookTextHTML.isEmpty() ) {
+            String curTextHtml = getCurrentText();
+
+            if ( curTextHtml.isEmpty() ) {
                 Toast.makeText( getActivity(),
-                                "Text is empty",
+                                "There is no text..",
                                 Toast.LENGTH_LONG ).show();
                 return true;
             }
-
-            Toast.makeText( getActivity(),
-                            "Reading all text..",
-                            Toast.LENGTH_LONG ).show();
 
             // arguments to the spritz fragment
             int textState = Perusal.Mode.TEXT.ordinal();
@@ -395,7 +398,7 @@ public class PerusalEpubFragment extends Fragment {
 
             // parse the book, "quickleee"
             // String chapter = getBookContentXmlString( mBook, -1 );
-            Document htmlDoc = Jsoup.parse(mBookTextHTML);
+            Document htmlDoc = Jsoup.parse(curTextHtml);
             Elements els = htmlDoc.select("p");
             for (org.jsoup.nodes.Element el : els) {
                 // only use inner text if it is a leaf paragraph

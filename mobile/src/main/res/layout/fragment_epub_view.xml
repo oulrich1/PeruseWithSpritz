@@ -28,7 +28,7 @@
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Prev Page"
+                android:text="Previous"
                 android:id="@+id/prevPageButton"
                 android:layout_weight="1" />
 
@@ -36,7 +36,7 @@
                 style="?android:attr/buttonStyleSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Next Page"
+                android:text="Next"
                 android:id="@+id/nextPageButton"
                 android:layout_weight="1"
                 android:nestedScrollingEnabled="false" />
