@@ -28,6 +28,7 @@ URL to prevent multiple spritz web scrapes?)
 
 ## Todo
 - Wearable Spritz Views. If wearable is present, send text data to the watch instead on "Spritz"
+-   TODO: create custom spritzing fragment
 - Feature to change font type for reading purposes
 - PDF Support
 - seperate text catagories: text, url, epub, images
