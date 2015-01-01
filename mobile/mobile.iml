@@ -120,7 +120,6 @@
     <orderEntry type="library" exported="" name="spritz-engine-common-1.0.10" level="project" />
     <orderEntry type="library" exported="" name="jsoup-1.8.1" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.1" level="project" />
-    <orderEntry type="module" module-name="opencv" exported="" />
   </component>
 </module>
 

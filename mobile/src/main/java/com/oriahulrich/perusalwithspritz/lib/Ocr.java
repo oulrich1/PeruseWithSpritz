@@ -37,10 +37,10 @@ public class Ocr {
         }
     }
 
-    static {
-        System.loadLibrary("lept");
-        System.loadLibrary("tess");
-    }
+//    static {
+//        System.loadLibrary("lept");
+//        System.loadLibrary("tess");
+//    }
 
     public static final String TAG = "Ocr";
 
@@ -98,7 +98,7 @@ public class Ocr {
         }
 
         // filtering
-        mImageBitmap = Filter.doFiltering(mImageBitmap);
+//        mImageBitmap = Filter.doFiltering(mImageBitmap);
 
         // recognition
         try {

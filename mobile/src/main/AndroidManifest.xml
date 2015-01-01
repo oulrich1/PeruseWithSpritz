@@ -8,13 +8,13 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <!-- for taking a picture from which to extract text -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera"
-                  android:required="false" />
+    <!--<uses-permission android:name="android.permission.CAMERA" />-->
+    <!--<uses-feature android:name="android.hardware.camera"-->
+                  <!--android:required="false" />-->
 
     <!-- for saving the picture from the activityResult
          response and reading for OCR -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!--<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />-->
 
     <application
         tools:replace="android:icon"

@@ -51,9 +51,9 @@ import com.spritzinc.android.sdk.SpritzSDK;
 // local project includes
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 
-import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
+//import org.opencv.android.BaseLoaderCallback;
+//import org.opencv.android.LoaderCallbackInterface;
+//import org.opencv.android.OpenCVLoader;
 
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
@@ -237,34 +237,34 @@ public class MainActivity extends Activity
         return book;
     }
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    Log.d(TAG, "OpenCV loaded successfully");
-
-                    // TODO: ?
-                    /// not sure if this is the right way to do this
-                    /// but since we shouldnt ocr a shared image as soon
-                    /// as it is sent but wait for loading to finish.
-                    /// specifically, wait until the view is drawn AND
-                    /// when opencv is loaded.. (at LEAST the latter)
-
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
+//    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+//        @Override
+//        public void onManagerConnected(int status) {
+//            switch (status) {
+//                case LoaderCallbackInterface.SUCCESS:
+//                {
+//                    Log.d(TAG, "OpenCV loaded successfully");
+//
+//                    // TODO: ?
+//                    /// not sure if this is the right way to do this
+//                    /// but since we shouldnt ocr a shared image as soon
+//                    /// as it is sent but wait for loading to finish.
+//                    /// specifically, wait until the view is drawn AND
+//                    /// when opencv is loaded.. (at LEAST the latter)
+//
+//                } break;
+//                default:
+//                {
+//                    super.onManagerConnected(status);
+//                } break;
+//            }
+//        }
+//    };
 
     @Override
     protected void onResume() {
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
+//        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_9, this, mLoaderCallback);
         Log.d(TAG, "onResume");
 //
 //        ShowcaseView showcaseView = (new ShowcaseView.Builder(this))

@@ -108,7 +108,7 @@ public class NavigationDrawerFragment extends Fragment {
         String[] titles = new String[]{
                 getString(R.string.title_section1),
                 getString(R.string.title_section2),
-                getString(R.string.title_section3),
+//                getString(R.string.title_section3),
         };
 
         return titles;
@@ -118,7 +118,7 @@ public class NavigationDrawerFragment extends Fragment {
         int[] iconIds = new int[] {
                 R.drawable.ic_peruse_book,
                 R.drawable.ic_peruse_recent,
-                R.drawable.ic_peruse_ocr,
+//                R.drawable.ic_peruse_ocr,
         };
         return iconIds;
     }
