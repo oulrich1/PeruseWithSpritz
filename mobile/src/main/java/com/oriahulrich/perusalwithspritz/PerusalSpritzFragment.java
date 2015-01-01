@@ -374,6 +374,15 @@ public class PerusalSpritzFragment
         return mSpritzView;
     }
 
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if ( mSpritzView != null ) {
+            mSpritzView.reset();
+        }
+    }
+
     public void onBtnPauseClick(View view) {
         mSpritzView.pause();
     }
