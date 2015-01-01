@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    >
 
     <!--<TextView-->
         <!--android:layout_width="wrap_content"-->
@@ -14,33 +15,41 @@
 
     <WebView
         android:layout_width="match_parent"
-        android:layout_height="468dp"
+        android:layout_height="fill_parent"
         android:id="@+id/epubWebView"
-        android:layout_gravity="center_horizontal" />
-
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="50dp"
+        />
 
     <TableLayout
+        android:layout_alignParentBottom="true"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="wrap_content">
         <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
             android:weightSum="2">
             <Button
                 style="?android:attr/buttonStyleSmall"
-                android:layout_width="wrap_content"
+                android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:text="Previous"
+                android:textSize="18dp"
                 android:id="@+id/prevPageButton"
+                android:layout_marginRight="1dp"
                 android:layout_weight="1" />
 
             <Button
                 style="?android:attr/buttonStyleSmall"
-                android:layout_width="wrap_content"
+                android:layout_width="0dip"
                 android:layout_height="wrap_content"
                 android:text="Next"
+                android:textSize="18dp"
                 android:id="@+id/nextPageButton"
+                android:layout_marginLeft="1dp"
                 android:layout_weight="1"
                 android:nestedScrollingEnabled="false" />
         </TableRow>
         </TableLayout>
 
-</LinearLayout>
+</RelativeLayout>
