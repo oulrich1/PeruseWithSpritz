@@ -3,9 +3,13 @@ package com.oriahulrich.perusalwithspritz;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.renderscript.Element;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -15,11 +19,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.oriahulrich.perusalwithspritz.Settings.SetPreferencesActivity;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
 /** Jsoup is awesome! */
@@ -66,6 +72,8 @@ public class PerusalEpubFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static final String ARG_BOOK = "arg_book";
 
+    private static final int EPUB_PREFERENCES_ACTIVITY_REQUEST_CODE = 123;
+
     static private String TAG = "Epub Controller Fragment";
 
     // the book from which to read
@@ -77,6 +85,12 @@ public class PerusalEpubFragment extends Fragment {
 
     Button   mPrevPageButton;
     Button   mNextPageButton;
+
+    // ( determines how much text to get fom the epub,
+    // for purpose of Spritzing more or less text )
+    private int mPageSize;
+    private int mFontSize;
+    private String mCssSelector;
 
 
     // Helper class for holding the text in a page
@@ -146,6 +160,7 @@ public class PerusalEpubFragment extends Fragment {
         if ( mPages == null ) {
             mPages = new ArrayList<Page>();
         }
+
     }
 
 
@@ -172,14 +187,15 @@ public class PerusalEpubFragment extends Fragment {
                 Page offset = new Page();
                 offset.startResId = curPage.stopResId;
                 offset.startCharIdx = curPage.stopCharIdx;
-                Page newPage = getNextPage(mBook, 20, offset);
+                Page newPage = getNextPage(mBook, mPageSize, offset);
 
                 boolean isEmptyPage = (newPage.startCharIdx == newPage.stopCharIdx)
                                       && (newPage.startResId == newPage.stopResId);
                 isEmptyPage = isEmptyPage || newPage.text.isEmpty();
 
+                // add the page and update
+                // but only if VALID new "page"
                 if ( !isEmptyPage ) {
-                    // add the page and update, only if valid new page
                     mPages.add( newPage );
                     mCurPageIdx++;
                 }
@@ -212,18 +228,16 @@ public class PerusalEpubFragment extends Fragment {
 
         // get the intent arguments
         mBook = (Book) getArguments().getSerializable(ARG_BOOK);
+        mPageSize = Integer.parseInt(getCurrentPageSizePreference());
+        updateFontsize( Integer.parseInt(getCurrentFontsizePreference()) );
+        mCssSelector = getCurrentCssSelectorPreference();
 
         // perform the book processing (to get the first
         // first pages) right away if possible
         if ( mBook != null && mPages.size() == 0 ) {
 //            mBookProcessingThread.start();
 
-            // initialize the first page offset to the
-            // first "bit of words" in the text. bit of words
-            // is arbitrary and is set to some "number of lines"
-            // worth of words.. for now..
-
-            Page bookPage = getFirstPage( mBook, 20 );
+            Page bookPage = getFirstPage( mBook, mPageSize );
             mPages.clear();
             mPages.add(bookPage);
             mCurPageIdx = 0;
@@ -237,10 +251,6 @@ public class PerusalEpubFragment extends Fragment {
     public void onResume() {
         super.onResume();
         updateWebView();
-
-        // before we update the web view with
-        // the text we need to know for sure
-        // that the processing thread is finish
 //        try {
 //            mBookProcessingThread.join();
 //        } catch (Exception e) {
@@ -276,21 +286,38 @@ public class PerusalEpubFragment extends Fragment {
         return getNextPage(book, maxLines, offset);
     }
 
-    private Page getNextPage( Book book, int maxLines, Page offset ) {
-        // mText = book.getTableOfContents().getTocReferences().toString();
-//        Resources resources = book.getResources();
-//        Map<String, Resource> resourceMap = resources.getResourceMap();
+    // returns true if the String is an HTML element
+    // that contains inner text..
+    private boolean isGoodEpubLine( String htmlLine, String cssSelector )
+    {
+        if ( htmlLine.isEmpty() )
+            return false;
 
+        Document htmlDoc = Jsoup.parse(htmlLine);
+        Elements els = htmlDoc.select(cssSelector);
+
+        if ( els.size() <= 0 )
+            return false;
+
+        for (org.jsoup.nodes.Element el : els)
+        {
+            if ( el.hasText() )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Page getNextPage( Book book, int maxLines, Page offset )
+    {
         // the spine might not contain all resources..
         Spine spine = book.getSpine();
         List<SpineReference> spineList = spine.getSpineReferences();
         int count = spineList.size();
         int lineCount = 0;
 
-        // maybe something like this? or.. the internal map at least?
-//        Collection<Resource> resources = book.getResources().getAll();
-
-        // temporary buffer when reading from the reader
         String line;
 
         // the book text is build and stored here, then returned as String
@@ -333,10 +360,14 @@ public class PerusalEpubFragment extends Fragment {
                 while ( (line = reader.readLine()) != null
                          && lineCount < maxLines )
                 {
-                    curResCharOffset += line.length();
-                    strBuilder.append(line).append("\n");
-
-                    lineCount += 1;
+                    // only append the line if it is valid..
+                    // which means the html element must have
+                    // something in it's text content
+                    if ( isGoodEpubLine( line, mCssSelector ) ) {
+                        curResCharOffset += line.length();
+                        strBuilder.append(line).append("\n");
+                        lineCount += 1;
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -345,7 +376,6 @@ public class PerusalEpubFragment extends Fragment {
 
         // Build a new "Page" for keeping track of the pages
         // read so far and where to start reading next pages
-
         Page page = new Page();
         page.text = strBuilder.toString();
 
@@ -396,28 +426,20 @@ public class PerusalEpubFragment extends Fragment {
         int textState = Perusal.Mode.TEXT.ordinal();
         String text = "";
 
-        // parse the book, "quickleee"
-        // String chapter = getBookContentXmlString( mBook, -1 );
+        // get the text
         Document htmlDoc = Jsoup.parse(curTextHtml);
         Elements els = htmlDoc.select(selector);
-        for (org.jsoup.nodes.Element el : els) {
-
-            // only use inner text if it is a leaf paragraph
-            // node (reason: assumed to be the only type that
-            // contains book text) (Update: this assumption
-            // does not hold)
-            // if ( el.children().size() == 0 )
-
+        for (org.jsoup.nodes.Element el : els)
+        {
             if ( el.hasText() )
             {
                 text += el.text();
-                // just in case each line does not
-                // have a new line or seperator
                 text += " ";
             }
         }
 
-        int peruseSectionNumber = 1; // force section nav number
+        // navigate to the spritzing fragment
+        int peruseSectionNumber = 1;
         boolean shouldAttemptSavePerusal = true;
         Fragment fragment = PerusalSpritzFragment
                 .newInstance( peruseSectionNumber, textState,
@@ -440,18 +462,84 @@ public class PerusalEpubFragment extends Fragment {
         int id = item.getItemId();
         if (id == R.id.action_perform_spritz_on_text) {
             // select text from paragraph tags
-            parseTextFromHtmlAndDoSpritzing("p");
+            parseTextFromHtmlAndDoSpritzing(mCssSelector);
             return true;
         } else if (id == R.id.action_epub_settings) {
-            String msg = "Not implemented yet. TODO: give the user ability to: " +
-                         "(1) change words per group, (2) fontsize, (3) html " +
-                         "selector tags.";
-            Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), SetPreferencesActivity.class);
+            startActivityForResult(intent, EPUB_PREFERENCES_ACTIVITY_REQUEST_CODE);
+            // see a the onActivityResult implemented below this code
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+
+    // Shared preferences specifically..
+    private String getDefaultPageSizePreference() {
+        Context context = getActivity();
+        return context.getResources().getString(R.string.preference_page_size_default);
+    }
+    private String getDefaultFontsizePreference() {
+        Context context = getActivity();
+        return context.getResources().getString(R.string.preference_fontsize);
+    }
+    private String getDefaultCssSelectorPreference() {
+        Context context = getActivity();
+        return context.getResources().getString(R.string.preference_css_selector);
+    }
+    private String getCurrentPageSizePreference() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        return  prefs.getString( "preference_epub_reader_page_size", getDefaultPageSizePreference() );
+    }
+    private String getCurrentFontsizePreference() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        return prefs.getString( "preference_epub_reader_fontsize", getDefaultFontsizePreference() );
+    }
+    private String getCurrentCssSelectorPreference() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        return prefs.getString( "preference_epub_reader_css_selector", getDefaultCssSelectorPreference() );
+    }
+
+
+    // sets the fontsize and also updates the webview's fontsize
+    private void updateFontsize(int fontsize) {
+        mFontSize = fontsize;
+        if ( mWebView != null ) {
+            WebSettings webSettings = mWebView.getSettings();
+            webSettings.setDefaultFontSize(mFontSize);
+            // webSettings.setTextSize(WebSettings.TextSize.SMALLEST);
+        }
+    }
+
+    private void updateParamsFromPreferences() {
+        // set the number of "lines" per webview page essentially
+        mPageSize = Integer.parseInt(getCurrentPageSizePreference());
+
+        // the font size visible in the "Reader"
+        updateFontsize( Integer.parseInt(getCurrentFontsizePreference()) );
+
+        // the css selector used to parse the html and extract the text for spritzing
+        mCssSelector = getCurrentCssSelectorPreference();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == EPUB_PREFERENCES_ACTIVITY_REQUEST_CODE) {
+            // gets the shared preferences, extracts
+            // the value, stores it in the numlines
+            // ( which determines how much text to get fom the epub,
+            // for purpose of Spritzing more or less text )
+            updateParamsFromPreferences();
+        }
+    }
 
     @Override
     public void onAttach(Activity activity) {

@@ -7,11 +7,13 @@ import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -43,6 +45,7 @@ import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
 import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
 import com.github.amlcurran.showcaseview.targets.ViewTarget;
 import com.oriahulrich.perusalwithspritz.lib.Helpers;
+import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 import com.spritzinc.android.sdk.SpritzSDK;
 
 // local project includes
@@ -151,7 +154,7 @@ public class MainActivity extends Activity
         sqLiteDAO = new SQLiteDAO(this);
         sqLiteDAO.open();
 
-        Log.d(TAG, " Native string: " + getStringFromNative());
+//        Log.d(TAG, " Native string: " + getStringFromNative());
 
         // Get intent with the text: (1) raw text, (2) url, (3) image
         Intent intent = getIntent();
@@ -467,6 +470,8 @@ public class MainActivity extends Activity
             // the user shared a url
             fragment = PerusalEditTextFragment
                     .newInstance(position + 1, mURL, mInputMethodState );
+//            int textState = Perusal.Mode.URL.ordinal();
+//            navigateToSpritzFragment(textState, mURL);
         } else if ( mInputMethodState == InputMethodState.IMAGE_SHARE ) {
             // the user shared a raw image
             fragment = PerusalEditTextFragment
@@ -515,7 +520,10 @@ public class MainActivity extends Activity
             return;
         }
 
-        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. ");
+//        Toast.makeText(this, "OCR Disabled", Toast.LENGTH_SHORT).show();
+//        return;
+
+//        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. ");
 
         // create picture file and take picture
         // when the picture is finished the rest of
@@ -556,6 +564,7 @@ public class MainActivity extends Activity
             }
         }
     }
+
 
 
     private boolean dispatchTakePictureIntent() {

@@ -156,16 +156,6 @@ public class NavigationDrawerFragment extends Fragment {
             }
         });
 
-//        mDrawerListView.setAdapter(new ArrayAdapter<String>(
-//                getActionBar().getThemedContext(),
-//                R.layout.list_item_drawer,
-//                R.id.list_item_drawer_text1,
-//                new String[]{
-//                        getString(R.string.title_section1),
-//                        getString(R.string.title_section2),
-//                        getString(R.string.title_section3),
-//                }));
-
         mDrawerListView.setAdapter(new NavigationDrawerAdapter(
                 getActionBar().getThemedContext(),
                 getDrawerItems()

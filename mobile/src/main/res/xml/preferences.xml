@@ -1,0 +1,39 @@
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="E-Pub Reader Settings">
+
+        <EditTextPreference
+            android:defaultValue="@string/preference_page_size_default"
+            android:key="preference_epub_reader_page_size"
+            android:title="Page Size"
+            android:textSize="24dp"
+            android:summary="Change the number of lines in each 'page'"
+            android:inputType="number"
+            android:dialogTitle="Edit Page Size"
+        />
+
+        <EditTextPreference
+            android:defaultValue="@string/preference_fontsize"
+            android:key="preference_epub_reader_fontsize"
+            android:title="Fontsize"
+            android:textSize="24dp"
+            android:summary="Modify the size of the text in the reader"
+            android:inputType="number"
+            android:dialogTitle="Fontsize"
+        />
+
+        <EditTextPreference
+            android:defaultValue="@string/preference_css_selector"
+            android:key="preference_epub_reader_css_selector"
+            android:title="CSS Selector"
+            android:textSize="24dp"
+            android:summary="Delimited by commas (ie: 'p, div, span')"
+            android:inputType="text"
+            android:dialogTitle="CSS Selector"
+        />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
