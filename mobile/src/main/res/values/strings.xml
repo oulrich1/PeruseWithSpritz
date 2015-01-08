@@ -11,13 +11,14 @@
     <string name="action_recent_perusal_rename_title">Rename</string>
     <string name="action_recent_perusal_share">Share</string>
     <string name="action_recent_perusal_remove">Delete</string>
-    <string name="share_intent">Share recipe info to&#8230;</string>
+    <string name="share_intent">Share with&#8230;</string>
 
     <string name="showcase_main_title">Showcase Sample</string>
     <string name="showcase_main_message">Press the button showcased to change the showcase\'s style</string>
     <string name="button_hide">Change style</string>
     <string name="button_show">Show</string>
 
+    <string name="action_delete_all_recent_perusals">Delete All Items</string>
 
     <string name="action_settings">Settings</string>
     <string name="action_about">About</string>

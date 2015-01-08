@@ -15,6 +15,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -70,7 +71,7 @@ import nl.siegmann.epublib.epub.EpubReader;
 
 // inspiration : http://www.pageturner-reader.org/
 
-public class MainActivity extends Activity
+public class MainActivity extends FragmentActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     // Not important but for leaning purposes
@@ -216,7 +217,7 @@ public class MainActivity extends Activity
     }
 
     private Book parseEPUB(String path) {
-        AssetManager assetManager = getAssets();
+//        AssetManager assetManager = getAssets();
 
         Book book = null;
 

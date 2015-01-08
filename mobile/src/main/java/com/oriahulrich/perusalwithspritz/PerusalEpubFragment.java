@@ -11,6 +11,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.renderscript.Element;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.view.ViewPager;
+import android.text.TextPaint;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -19,6 +22,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -26,6 +30,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.oriahulrich.perusalwithspritz.Settings.SetPreferencesActivity;
+import com.oriahulrich.perusalwithspritz.ThirdParty.PageSplitter;
+import com.oriahulrich.perusalwithspritz.ThirdParty.TextPagerAdapter;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
 /** Jsoup is awesome! */
@@ -91,6 +97,10 @@ public class PerusalEpubFragment extends Fragment {
     private int mPageSize;
     private int mFontSize;
     private String mCssSelector;
+
+    // specific to the pager and pager adapter
+    private FragmentActivity myContext;
+    private ViewPager pagesView;
 
 
     // Helper class for holding the text in a page
@@ -206,8 +216,16 @@ public class PerusalEpubFragment extends Fragment {
 
             updateWebView();
         }
+
     };
 
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -242,6 +260,21 @@ public class PerusalEpubFragment extends Fragment {
             mPages.add(bookPage);
             mCurPageIdx = 0;
         }
+
+//        pagesView = (ViewPager) rootView.findViewById(R.id.pages);
+//        pagesView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+//            @Override
+//            public void onGlobalLayout() {
+//                PageSplitter pageSplitter = new PageSplitter(pagesView.getWidth(), pagesView.getHeight(), 1, 0);
+//
+//                TextPaint textPaint = new TextPaint();
+//                textPaint.setTextSize(getResources().getDimension(R.dimen.text_size));
+//                pageSplitter.append("Hello, ", textPaint);
+//
+//                pagesView.setAdapter(new TextPagerAdapter(myContext.getSupportFragmentManager(), pageSplitter.getPages()));
+//                pagesView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+//            }
+//        });
 
         return rootView;
     }
@@ -544,6 +577,7 @@ public class PerusalEpubFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        myContext = (FragmentActivity) activity;
         Log.d(TAG, "onAttach");
         ((MainActivity) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));

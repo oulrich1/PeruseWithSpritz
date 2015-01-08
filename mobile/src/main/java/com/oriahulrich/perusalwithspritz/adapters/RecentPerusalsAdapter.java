@@ -61,6 +61,12 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
         recentPerusalArrayList.remove(object);
     }
 
+    // removes all items from the adapter
+    public void removeAll() {
+        super.clear();
+        recentPerusalArrayList.clear();
+    }
+
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
 

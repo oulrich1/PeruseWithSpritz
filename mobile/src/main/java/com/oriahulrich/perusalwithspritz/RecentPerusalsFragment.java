@@ -243,6 +243,21 @@ public class RecentPerusalsFragment extends ListFragment {
         return isSuccess;
     }
 
+    private boolean removeAllPerusals() {
+        boolean isSuccess = true;
+        try {
+            recentPerusalsAdapter.removeAll();
+            sqLiteDAO.deleteAllPerusals();
+            recentPerusalsAdapter.notifyDataSetChanged();
+            Toast.makeText(getActivity(),
+                    "Removed all recent perusals",
+                    Toast.LENGTH_SHORT).show();
+        } catch (NullPointerException e) {
+            Log.d(TAG, e.toString());
+            isSuccess = false;
+        }
+        return isSuccess;
+    }
 
     private void shareTextPerusal(AdapterView.AdapterContextMenuInfo itemInfo) {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
@@ -289,36 +304,17 @@ public class RecentPerusalsFragment extends ListFragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         Log.d(TAG, " onCreateOptionsMenu");
-
-        /// Add Menu action items  here
-
-//        inflater.inflate(R.menu.edit_text_and_selection, menu);
+        inflater.inflate(R.menu.recent_perusals_action_menu, menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d(TAG, "FRAGMENT onOptionsItemSelected");
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-//        if (id == R.id.action_example) {
-//
-//            if (mEditText != null)
-//            {
-//                mText = mEditText.getText().toString();
-//            }
-//
-////            Toast.makeText(getActivity(), "Spritzing..", Toast.LENGTH_SHORT).show();
-//            int textState = PerusalSpritzFragment.Mode.TEXT.ordinal();
-//            Fragment fragment = PerusalSpritzFragment.newInstance(textState, mText);
-//            FragmentManager fragmentManager = getFragmentManager();
-//            fragmentManager.beginTransaction()
-//                    .replace(R.id.container, fragment)
-//                    .commit();
-
-//            return true;
-//        }
+        if (id == R.id.action_delete_all_recent_perusals) {
+            removeAllPerusals(); // remove all recent perusals..
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -333,102 +329,3 @@ public class RecentPerusalsFragment extends ListFragment {
 
 
 
-
-// add this to on activity created if we are going to implement
-// something that uses long hold click:
-
-
-/*
-*
-        // Edit the ingredient
-        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG, "onItemLongClick");
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                final Ingredient ingredient = (Ingredient) listView.getItemAtPosition(position);
-
-                final String oldIngredientTitle;
-                oldIngredientTitle = ingredient.getIngredientTitle();
-
-                final int pos = position;
-                final View v = view;
-
-                View  editIngredientContentView = View.inflate(getActivity(),
-                        R.layout.edit_ingredient_contentview, null);
-                final EditText ingredientTitleInputEditText =
-                        (EditText) editIngredientContentView.findViewById(R.id.editIngredientEditText);
-                ingredientTitleInputEditText.setText(ingredient.getIngredientTitle());
-                ingredientTitleInputEditText.setSelection(ingredientTitleInputEditText.getText().length());
-
-                final CheckBox checkBoxExcludeIngredient = (CheckBox) editIngredientContentView.findViewById(R.id.checkboxExcludeIngredient);
-                final CheckBox checkboxRequiredIngredient = (CheckBox) editIngredientContentView.findViewById(R.id.checkboxRequiredIngredient);
-
-                switch (ingredient.getSelectedState()){
-                    case EXCLUDE_STATE:
-                        checkBoxExcludeIngredient.setChecked(true);
-                        break;
-                    case REQUIRED_STATE:
-                        checkboxRequiredIngredient.setChecked(true);
-                        break;
-                }
-
-                checkBoxExcludeIngredient.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if ( checkBoxExcludeIngredient.isChecked() ) {
-                            checkboxRequiredIngredient.setChecked(false);
-                            ingredient.setSelectedState(Ingredient.SelectedStateType.EXCLUDE_STATE);
-                        } else {
-                            ingredient.setSelectedState(Ingredient.SelectedStateType.NORMAL_STATE);
-                        }
-                    }
-                });
-                checkBoxExcludeIngredient.setText(" Exclude  ");
-
-                checkboxRequiredIngredient.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if ( checkboxRequiredIngredient.isChecked() ) {
-                            checkBoxExcludeIngredient.setChecked(false);
-                            ingredient.setSelectedState(Ingredient.SelectedStateType.REQUIRED_STATE);
-                        } else {
-                            ingredient.setSelectedState(Ingredient.SelectedStateType.NORMAL_STATE);
-                        }
-                    }
-                });
-                checkboxRequiredIngredient.setText(" Require ");
-
-                builder.setTitle("Edit Ingredient");
-                builder.setView(editIngredientContentView);
-                builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        boolean prevSelectedState;
-                        CheckBox checkbox = (CheckBox) v.findViewById(R.id.ingredientCheckbox);
-                        prevSelectedState = checkbox.isChecked();
-                        checkbox.setChecked(false);
-                        ingredientAdapter.changeIngredientSelectedState(v, pos);
-                        sqLiteDAO.updateIngredientTitle(oldIngredientTitle, ingredientTitleInputEditText.getText().toString());
-                        ingredientAdapter.getItem(pos).setIngredientTitle(ingredientTitleInputEditText.getText().toString());
-                        ingredientAdapter.notifyDataSetChanged();
-
-                        if (!prevSelectedState){
-                            checkbox.toggle();
-                        }
-                        ingredientAdapter.itemClickListener(v, pos);
-                    }
-                });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-
-                builder.show();
-                return true;
-            }
-        });
-* */

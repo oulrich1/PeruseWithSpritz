@@ -122,6 +122,11 @@ public class SQLiteDAO {
         );
     }
 
+    public void deleteAllPerusals() {
+        Log.d(TAG, "All perusals deleted from database. (no table drop)");
+        sqLiteDatabase.delete( SQLiteDBHelper.TABLE_PERUSALS, null, null );
+    }
+
     public int updatePerusalTitle(String oldPerusalTitle, String newPerusalTitle) {
 
         if (newPerusalTitle.isEmpty()) {
@@ -170,35 +175,5 @@ public class SQLiteDAO {
         perusal.setModeInt(cursor.getInt(4));
         return perusal;
     }
-
-
-    /** Takes a new recipe and updates the recipe with the same ID, which exists in the database
-     *  TODO: check to see if the id of the recipe we wish to update already exists in the database
-     *        before updating */
-//    public int updateRecipeFavorite(Recipe newRecipe) {
-//        if (newRecipe == null) {
-//            Toast.makeText(context, "Update Recipe Favorite newRecipe is null..", Toast.LENGTH_LONG).show();
-//            return 0;
-//        }
-//
-//        long id                         = newRecipe.getRecipeId();
-//        String newRecipeTitle           = newRecipe.getRecipeTitle();
-//        String newRecipePerusalList  = newRecipe.getRecipeTitle();
-//        String newRecipeUrl             = newRecipe.getRecipeTitle();
-//        String newRecipePicUrl          = newRecipe.getRecipePicUrl();
-//
-//        ContentValues newContentValues = new ContentValues();
-//        newContentValues.put(SQLiteDBHelper.RECIPE_FAV_COLUMN_TITLE, newRecipeTitle.toLowerCase().trim());
-//        newContentValues.put(SQLiteDBHelper.RECIPE_FAV_COLUMN_Perusal_LIST, newRecipePerusalList.toLowerCase().trim());
-//        newContentValues.put(SQLiteDBHelper.RECIPE_FAV_COLUMN_URL, newRecipeUrl.toLowerCase().trim());
-//        newContentValues.put(SQLiteDBHelper.RECIPE_FAV_COLUMN_PIC_URL, newRecipePicUrl.toLowerCase().trim());
-//
-//        return sqLiteDatabase.update(
-//                SQLiteDBHelper.TABLE_RECIPE_FAVS,
-//                newContentValues,
-//                SQLiteDBHelper.RECIPE_FAV_COLUMN_ID + " = \"" + id + "\"",
-//                null
-//        );
-//    }
 
 }

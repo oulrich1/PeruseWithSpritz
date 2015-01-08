@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    tools:context="com.oriahulrich.perusalwithspritz.MainActivity"
     >
 
     <!--<TextView-->
@@ -12,6 +14,15 @@
         <!--android:text="New Text"-->
         <!--android:id="@+id/epubTextView"-->
         <!--android:layout_gravity="center_horizontal" />-->
+
+    <!--<android.support.v4.view.ViewPager-->
+        <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
+        <!--android:id="@+id/pages"-->
+        <!--android:padding="10dp"-->
+        <!--android:overScrollMode="never"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:layout_width="match_parent">-->
+    <!--</android.support.v4.view.ViewPager>-->
 
     <WebView
         android:layout_width="match_parent"
