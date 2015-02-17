@@ -138,6 +138,8 @@ public class PerusalSpritzFragment
         sqLiteDAO = ((MainActivity)getActivity()).getSqLiteDAO();
     }
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -184,19 +186,6 @@ public class PerusalSpritzFragment
             mSpritzView = null;
         }
         super.onDestroy();
-    }
-
-    @Override
-    public void onPause() {
-        // Pause the spritz view.
-        if(mSpritzView != null) {
-            mSpritzView.pause();
-        }
-
-        SpritzSDK.getInstance().removeLoginStatusChangeListener(this);
-        SpritzSDK.getInstance().removeLoginEventListener(this);
-
-        super.onPause();
     }
 
     @Override
@@ -374,9 +363,26 @@ public class PerusalSpritzFragment
         return mSpritzView;
     }
 
+    @Override
+    public void onPause() {
+        Log.d(TAG, "On Pause - before calling parent's");
+        super.onPause();
+        Log.d(TAG, "On Pause - after calling parent's");
+
+
+        // Pause the spritz view.
+        if(mSpritzView != null) {
+            mSpritzView.pause();
+//            SpritzSDK.getInstance().removeLoginStatusChangeListener(this);
+//            SpritzSDK.getInstance().removeLoginEventListener(this);
+        }
+    }
 
     @Override
     public void onStop() {
+        Log.d(TAG, "On Stop - before calling parent's");
+        super.onPause();
+        Log.d(TAG, "On Stop - after calling parent's");
         super.onStop();
         if ( mSpritzView != null ) {
             mSpritzView.reset();

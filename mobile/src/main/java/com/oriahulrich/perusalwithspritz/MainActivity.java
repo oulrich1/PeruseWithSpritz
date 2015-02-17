@@ -671,6 +671,7 @@ public class MainActivity extends FragmentActivity
 
     // given the text state -> msg can be either text or a url..
     // NOTE: this is the only entry point to spritzing.. just FYI
+    // BUT: epub fragment uses a custom navigation transaction to spritzing fragment
     public void navigateToSpritzFragment(int textState, String msg) {
         int peruseSectionNumber = 1; // force section nav number
         boolean shouldAttemptSavePerusal = true;

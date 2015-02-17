@@ -20,6 +20,7 @@ the url is saved. In that case, the title is set to the part after the web proto
 URL to prevent multiple spritz web scrapes?)
 
 ## Known Issues:
+- Spritz text is too small on some devices. (Update epub text equivalently)
 - URL Link sharing opens the spritz fragment (through the 'peruse controller' aka edittext fragment) and the url is saved in a recent perusal item, but Spritz fails to load and "spritz" the url.. The current user workaround is to go to the recent perusals list and select the url just shared/added. then it works flawlessly. 
 - Main activity: Choosing intent assumes "*/*" intent type is for e-pubs, should just be "application/epub+zip". On phone and simulator, sharing/sending epub from filesystem with the app created an intent with type "*/*". unexpected..
 - E-Pub UI is plain. ( Buttons or no buttons? Swipey views! )

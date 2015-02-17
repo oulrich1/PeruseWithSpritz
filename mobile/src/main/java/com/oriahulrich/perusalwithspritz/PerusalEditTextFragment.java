@@ -10,6 +10,7 @@ import android.app.FragmentManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -88,8 +89,8 @@ public class PerusalEditTextFragment extends Fragment {
         Bundle args = new Bundle();
 
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-
         args.putInt(ARG_INPUT_METHOD, inputMethod.ordinal());
+
         if ( inputMethod.ordinal() == MainActivity.InputMethodState.TEXT_EDIT.ordinal() ) {
             args.putString(ARG_TEXT, text);
         } else if ( inputMethod.ordinal() == MainActivity.InputMethodState.URL_SPRITZ.ordinal() ) {
@@ -109,7 +110,6 @@ public class PerusalEditTextFragment extends Fragment {
         Bundle args = new Bundle();
 
         args.putInt(ARG_SECTION_NUMBER, sectionNumber); // for the activity..
-
         args.putInt(ARG_INPUT_METHOD, inputMethod.ordinal());
         if ( inputMethod.ordinal() == MainActivity.InputMethodState.IMAGE_SHARE.ordinal() ) {
             args.putParcelable(ARG_URI, uri);
@@ -140,6 +140,16 @@ public class PerusalEditTextFragment extends Fragment {
         return rootView;
     }
 
+    /// ratchety way of making sure the url is loaded
+    private Handler mHandlerNavSpritzOnURL = new Handler();
+    private Runnable mRunnable = new Runnable() {
+        @Override
+        public void run() {
+            ((MainActivity)getActivity()).navigateToSpritzFragment(Perusal.Mode.URL.ordinal(), mURL);
+            mHandlerNavSpritzOnURL.removeCallbacks(mRunnable);
+        }
+    };
+
     @Override
     public void onResume() {
         super.onResume();
@@ -166,9 +176,7 @@ public class PerusalEditTextFragment extends Fragment {
             // TODO: if the url is actually a pdf then think about that someday..
 
             // load the spritz fragment
-            int textState = Perusal.Mode.URL.ordinal();
-            ((MainActivity)getActivity()).
-                    navigateToSpritzFragment(textState, mURL);
+            mHandlerNavSpritzOnURL.postDelayed(mRunnable, 700);
 
         } else if ( inputMethod == MainActivity.InputMethodState.IMAGE_SHARE.ordinal() ) {
             mUri = getArguments().getParcelable(ARG_URI);
@@ -176,7 +184,8 @@ public class PerusalEditTextFragment extends Fragment {
             // perform ocr and then spritz
             if ( mOcrEnabled )
             {
-                if ( !m_didOcr ){
+                if ( !m_didOcr )
+                {
                     Log.d(TAG, "OCR and then run editText fragment on text");
                     mText = doOcrGetText( mUri );
                     m_didOcr = true;
@@ -236,12 +245,13 @@ public class PerusalEditTextFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Log.d(TAG, "FRAGMENT onOptionsItemSelected");
+        Log.d(TAG, " onOptionsItemSelected");
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_perform_spritz_on_text) {
+            Log.d(TAG, "    About to spritz text");
 
             if (mEditText != null) {
                 mText = mEditText.getText().toString();
