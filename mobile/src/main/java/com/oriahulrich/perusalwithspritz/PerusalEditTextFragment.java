@@ -91,6 +91,8 @@ public class PerusalEditTextFragment extends Fragment {
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         args.putInt(ARG_INPUT_METHOD, inputMethod.ordinal());
 
+        // share text to spritz or url to load webpage and text content to spritz.
+        // (ie: share text or url)
         if ( inputMethod.ordinal() == MainActivity.InputMethodState.TEXT_EDIT.ordinal() ) {
             args.putString(ARG_TEXT, text);
         } else if ( inputMethod.ordinal() == MainActivity.InputMethodState.URL_SPRITZ.ordinal() ) {
@@ -109,6 +111,7 @@ public class PerusalEditTextFragment extends Fragment {
         PerusalEditTextFragment fragment = new PerusalEditTextFragment();
         Bundle args = new Bundle();
 
+        /// share photo with app to ocr it
         args.putInt(ARG_SECTION_NUMBER, sectionNumber); // for the activity..
         args.putInt(ARG_INPUT_METHOD, inputMethod.ordinal());
         if ( inputMethod.ordinal() == MainActivity.InputMethodState.IMAGE_SHARE.ordinal() ) {

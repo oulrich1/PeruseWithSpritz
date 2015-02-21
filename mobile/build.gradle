@@ -10,7 +10,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 21
 //        versionCode 200124
-        versionName "0.1.2"
+        versionName "0.1.4"
         ndk {
             moduleName "TessWrapperNDKModule"
 //            stl "stllibrary" ie stlport_static
@@ -22,7 +22,8 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 127
+
+    defaultConfig.versionCode = 129
 
     flavorGroups "abi"
 
