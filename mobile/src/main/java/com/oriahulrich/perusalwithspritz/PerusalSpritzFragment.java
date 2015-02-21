@@ -282,22 +282,21 @@ public class PerusalSpritzFragment
     public String makeTitleFromText( String text ) {
         String[] firstWords = text.split(" ");
 
-        // validate the title before storing it. in the db..
-        // appearantly the single quotes breaks things.
-        for (int i = 0; i < firstWords.length; i++) {
-            String word = firstWords[i];
+        String title = "";
+        firstWords = Arrays.copyOfRange( firstWords, 0, 3 );
+
+        // validate the title strings ( remove bad unstorable characters )
+        for (String word : firstWords) {
             word = word.replace("\'", "");
-            firstWords[i] = word.replace("\"", "");
+            word = word.replace("\"", "");
+            title += Helpers.capitalize( word ) + " ";
         }
 
-        String title = "<Untitled>";
-        Arrays.copyOfRange( firstWords, 0, 3 );
-        if ( firstWords.length > 0 )
-            title = Helpers.capitalize(firstWords[0]); // Assign first word to title
-        if ( firstWords.length > 1 )
-            title += " " + Helpers.capitalize(firstWords[1]); // append next works to title
-        if ( firstWords.length > 2 )
-            title += " " + Helpers.capitalize(firstWords[2]);
+        if ( title.isEmpty() )
+        {
+            title = "<Untitled>";
+        }
+
         return title;
     }
 
