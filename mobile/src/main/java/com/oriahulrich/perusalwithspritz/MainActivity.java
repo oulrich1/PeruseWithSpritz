@@ -1,39 +1,35 @@
 package com.oriahulrich.perusalwithspritz;
 
 // Standard Includes
-import android.app.Activity;
 
 import android.app.ActionBar;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.support.v4.widget.DrawerLayout;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
+import com.oriahulrich.perusalwithspritz.lib.Helpers;
+import com.spritzinc.android.sdk.SpritzSDK;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Map;
+
+import nl.siegmann.epublib.domain.Book;
+import nl.siegmann.epublib.epub.EpubReader;
 
 // library includes
 //import com.github.amlcurran.showcaseview.ApiUtils;
@@ -41,25 +37,10 @@ import java.util.Map;
 //import com.github.amlcurran.showcaseview.ShowcaseView;
 //import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
 //import com.github.amlcurran.showcaseview.targets.ViewTarget;
-import com.github.amlcurran.showcaseview.ShowcaseView;
-import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
-import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
-import com.github.amlcurran.showcaseview.targets.ViewTarget;
-import com.oriahulrich.perusalwithspritz.lib.Helpers;
-import com.oriahulrich.perusalwithspritz.pojos.Perusal;
-import com.spritzinc.android.sdk.SpritzSDK;
-
 // local project includes
-import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
-
 //import org.opencv.android.BaseLoaderCallback;
 //import org.opencv.android.LoaderCallbackInterface;
 //import org.opencv.android.OpenCVLoader;
-
-import nl.siegmann.epublib.domain.Book;
-import nl.siegmann.epublib.domain.Resource;
-import nl.siegmann.epublib.domain.Resources;
-import nl.siegmann.epublib.epub.EpubReader;
 
 // siegmann epublib: http://www.siegmann.nl/epublib/android
 //import nl.siegmann.epublib.domain.Book;
@@ -213,6 +194,13 @@ public class MainActivity extends FragmentActivity
 //                    .hideOnTouchOutside()
 //                    .build();
 //            sv.show();
+        }
+
+        int currentOrientation = getResources().getConfiguration().orientation;
+        if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        } else {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         }
     }
 

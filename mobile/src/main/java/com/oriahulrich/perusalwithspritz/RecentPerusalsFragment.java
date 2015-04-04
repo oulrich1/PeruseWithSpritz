@@ -250,7 +250,7 @@ public class RecentPerusalsFragment extends ListFragment {
             sqLiteDAO.deleteAllPerusals();
             recentPerusalsAdapter.notifyDataSetChanged();
             Toast.makeText(getActivity(),
-                    "Removed all recent perusals",
+                    "Deleted all recent perusals",
                     Toast.LENGTH_SHORT).show();
         } catch (NullPointerException e) {
             Log.d(TAG, e.toString());

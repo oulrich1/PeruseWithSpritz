@@ -6,7 +6,6 @@ package com.oriahulrich.perusalwithspritz;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,22 +18,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RelativeLayout;
 import android.widget.Toast;
+
+import com.oriahulrich.perusalwithspritz.lib.Helpers;
+import com.oriahulrich.perusalwithspritz.lib.Ocr;
+import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
 //import com.github.amlcurran.showcaseview.ApiUtils;
 //import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
 //import com.github.amlcurran.showcaseview.ShowcaseView;
 //import com.github.amlcurran.showcaseview.targets.ViewTarget;
-import com.github.amlcurran.showcaseview.ApiUtils;
-import com.github.amlcurran.showcaseview.OnShowcaseEventListener;
-import com.github.amlcurran.showcaseview.ShowcaseView;
-import com.github.amlcurran.showcaseview.targets.ViewTarget;
-import com.oriahulrich.perusalwithspritz.lib.Helpers;
-import com.oriahulrich.perusalwithspritz.lib.Ocr;
-import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
 // TODO: call this the perusal Controller fragment or that nature..
 
@@ -152,6 +146,16 @@ public class PerusalEditTextFragment extends Fragment {
             mHandlerNavSpritzOnURL.removeCallbacks(mRunnable);
         }
     };
+    //kludge to spritz the text from image
+    private Runnable mRunnableDoSpritzPostOcr = new Runnable() {
+        @Override
+        public void run() {
+            int textState = Perusal.Mode.TEXT.ordinal();
+            ((MainActivity)getActivity())
+                    .navigateToSpritzFragment(textState, mText);
+            mHandlerNavSpritzOnURL.removeCallbacks(mRunnableDoSpritzPostOcr);
+        }
+    };
 
     @Override
     public void onResume() {
@@ -179,7 +183,7 @@ public class PerusalEditTextFragment extends Fragment {
             // TODO: if the url is actually a pdf then think about that someday..
 
             // load the spritz fragment
-            mHandlerNavSpritzOnURL.postDelayed(mRunnable, 700);
+            mHandlerNavSpritzOnURL.postDelayed(mRunnable, 550);
 
         } else if ( inputMethod == MainActivity.InputMethodState.IMAGE_SHARE.ordinal() ) {
             mUri = getArguments().getParcelable(ARG_URI);
@@ -200,9 +204,7 @@ public class PerusalEditTextFragment extends Fragment {
                 mText = "";
             }
 
-            int textState = Perusal.Mode.TEXT.ordinal();
-            ((MainActivity)getActivity())
-                    .navigateToSpritzFragment(textState, mText);
+            mHandlerNavSpritzOnURL.postDelayed(mRunnableDoSpritzPostOcr, 550);
         }
     }
 
@@ -345,7 +347,7 @@ public class PerusalEditTextFragment extends Fragment {
 
             // remove bad characters per word
             for ( int i = 0; i < words.length; ++i ) {
-                words[i] = words[i].replaceAll("[^a-zA-Z0-9]+", "");
+                words[i] = words[i].replaceAll("[^a-zA-Z0-9]+", " ");
                 text += words[i] + " ";
             }
             result.text = text;

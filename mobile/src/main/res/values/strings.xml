@@ -7,7 +7,14 @@
     <string name="title_section3">OCR</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- Spritz action -->
     <string name="action_spritz_selection">Spritz This!</string>
+
+    <!-- In Spritz Fragment, action menu contains a text to speech button -->
+    <string name="action_text_to_speech">Text to Speech</string>
+
+    <!--Recent perusals -->
     <string name="action_recent_perusal_rename_title">Rename</string>
     <string name="action_recent_perusal_share">Share</string>
     <string name="action_recent_perusal_remove">Delete</string>
@@ -18,7 +25,7 @@
     <string name="button_hide">Change style</string>
     <string name="button_show">Show</string>
 
-    <string name="action_delete_all_recent_perusals">Delete All Items</string>
+    <string name="action_delete_all_recent_perusals">Delete All Perusals</string>
 
     <string name="action_settings">Settings</string>
     <string name="action_about">About</string>
@@ -52,11 +59,8 @@
     </string>
     <string name="about_dismiss">Dismiss</string>
 
-
     <!--Epub Related Strings - Shared Prefs -->
     <string name="preference_page_size_default">25</string>
     <string name="preference_fontsize">24</string>
     <string name="preference_css_selector">p, div, span</string>
-
-
 </resources>

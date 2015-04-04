@@ -11,8 +11,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -62,6 +65,7 @@ public class PerusalSpritzFragment
 
     /** Spritz view specific member fields */
     private FrameLayout mFrameLayoutSpritzContainer;
+    private SpritzSource   mSpritzSource;
     private SpritzBaseView mSpritzView;
 
     /** shared preferences and settings persentence */
@@ -69,11 +73,14 @@ public class PerusalSpritzFragment
     private static final String SHARED_PREFS_NAME = "main";
     private static final String PREF_SPEED = "speed";
 
-
     // Experimental:
     private boolean m_didDetectWearable;
     private boolean m_isWearableSpritzEnabled;
 
+    private boolean m_bToggleTextToSpeech;      // toggled by user to perform TTS on spritz text
+    private boolean m_bIsTTSEngineInit;         // is the engine init
+    private boolean m_bUserDidTryTTSBeforeInit; // user attempted TTS before engine init, let user know when ready
+    private TextToSpeech m_textToSpeech;        // the TTS engine
 
     /// For the purpose of extracting the domain name ///
     // http://www.mkyong.com/regular-expressions/domain-name-regular-expression-example/
@@ -129,16 +136,50 @@ public class PerusalSpritzFragment
 
         m_didDetectWearable = false;        // if we detected a wearable
         m_isWearableSpritzEnabled = false;  // if the user wants to use their wearable if it is connected
+
+        // text to speech
+        m_bToggleTextToSpeech = false;        // toggled by the user
+        m_bIsTTSEngineInit = false;           // flag for whether or not the engine is init
+        m_bUserDidTryTTSBeforeInit = false;   // if true, in onInitListener, let the user know to try again
+        m_textToSpeech = null;                // the text to speech engine
     }
+
+    /* Callback for when the TTS initializes */
+    class TTS_OnInitListenerImpl implements TextToSpeech.OnInitListener
+    {
+        @Override
+        public void onInit(int status) {
+            m_bIsTTSEngineInit = (status == TextToSpeech.SUCCESS);
+            if ( m_bUserDidTryTTSBeforeInit ) {
+                m_bUserDidTryTTSBeforeInit = false; // now the variable is invalid anyways
+                if ( m_bIsTTSEngineInit ) {
+                    Toast.makeText(getActivity(),
+                            "TTS Initialized! :)",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText( getActivity(),
+                            "TTS Init Failed..",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            // debugging
+            if ( !m_bIsTTSEngineInit ) {
+                Log.d(TAG, "Failed to init TTS engine..");
+            } else {
+                Log.d(TAG, "Text to Speech Initialized");
+            }
+            TTSPostInit();
+        } // end on init
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, " onCreate");
         super.onCreate(savedInstanceState);
         sqLiteDAO = ((MainActivity)getActivity()).getSqLiteDAO();
+        m_textToSpeech = new TextToSpeech(getActivity(), new TTS_OnInitListenerImpl());
     }
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -147,17 +188,72 @@ public class PerusalSpritzFragment
         Log.d(TAG, "FRAGMENT onCreateView");
         View rootView = inflater.inflate(R.layout.fragment_spritz, container, false);
         mRootView = rootView;
-
-
         mSpritzView = setupSpritzView(inflater, rootView);
         mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
-
-//        if (savedInstanceState == null) {
-//            updateSpritzSpeed(mSpritzView); // from shared preferences
-//        }
-
+        setHasOptionsMenu(true);
         return rootView;
     }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        Log.d(TAG, "onCreateOptionsMenu");
+        inflater.inflate(R.menu.spritz_action_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Log.d(TAG, " onOptionsItemSelected");
+        int id = item.getItemId();
+        if (id == R.id.action_text_to_speech) {
+            OnClickTextToSpeech();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void OnClickTextToSpeech() {
+        // TODO: toggle hook text to speech into the output of a spritz transmitter
+        // OR Hook spritz into the text to speech input. Maybe a spritz callback per wordo?
+        if ( !m_bIsTTSEngineInit )
+        {
+            Toast.makeText( getActivity(),
+                            "Please try again when TTS is initialized..",
+                            Toast.LENGTH_SHORT).show();
+            m_bUserDidTryTTSBeforeInit = true;
+        }
+        else
+        {
+            m_bToggleTextToSpeech = !m_bToggleTextToSpeech;
+            if ( m_bToggleTextToSpeech )
+            {
+                Log.d(TAG, "Text to Speech Enabled");
+                PerformTextToSpeech();
+            }
+            else
+            {
+                Log.d(TAG, "Text to Speech Disabled");
+                StopTextToSpeech();
+            }
+        }
+    }
+
+    private void TTSPostInit()
+    {
+        // use m_textToSpeech
+//        m_textToSpeech.speak("Hey there", TextToSpeech.QUEUE_FLUSH, null);
+    }
+
+    // TODO: attach the spritz to the text to speech engine.. somehow
+    private void PerformTextToSpeech() {
+        // use m_textToSpeech, mSpritzSource, mSpritzView
+    }
+
+    // TODO: halt text to speech
+    private void StopTextToSpeech() {
+        // use m_textToSpeech, mSpritzSource, mSpritzView
+    }
+
 
     private void updateSpritzSpeed(SpritzBaseView view) {
         int savedSpeed = getSharedPrefs().getInt(PREF_SPEED, -1);
@@ -201,16 +297,7 @@ public class PerusalSpritzFragment
                 // will not create if already exists
                 createAddPerusalToDB(sqLiteDAO, mTextSpritz);
             }
-
-//            GoogleApiClient client;
-//            PendingResult<NodeApi.GetConnectedNodesResult> devices
-//                    = Wearable.NodeApi.getConnectedNodes(client);
-
-
             if ( m_didDetectWearable && m_isWearableSpritzEnabled ){
-                // then two options are valid: (think run-time and feasibility)
-                // (1) send text to spritzing app on wear
-                // (2) send spritz notification card/image to wear
 
             } else {
                 doSpritzing( mTextSpritz );
@@ -287,6 +374,8 @@ public class PerusalSpritzFragment
 
         // validate the title strings ( remove bad unstorable characters )
         for (String word : firstWords) {
+            if ( word == null || word.length() == 0 )
+                continue;
             word = word.replace("\'", "");
             word = word.replace("\"", "");
             title += Helpers.capitalize( word ) + " ";
@@ -319,25 +408,23 @@ public class PerusalSpritzFragment
             return false;
         }
 
-        String sampleMessage =  "Go back to perusal page, then paste " +
-                                "some text and hit the play button!";
         try {
-
-            SpritzSource source;
             int mode = getArguments().getInt(ARG_MODE);
-
             if (mode == Perusal.Mode.URL.ordinal()) {
                 String cssSelectors = "p";
-                source = new UrlSpritzSource( text, Content.SelectorType.CSS,
+                mSpritzSource = new UrlSpritzSource( text, Content.SelectorType.CSS,
                                               cssSelectors, new Locale("en", "US") );
             } else if (mode == Perusal.Mode.TEXT.ordinal()) {
-                source = new SimpleSpritzSource( text, new Locale("en", "US") );
+                mSpritzSource = new SimpleSpritzSource( text, new Locale("en", "US") );
             } else {
-                source = new SimpleSpritzSource( sampleMessage, new Locale("en", "US") );
+                String sampleMessage =
+                        "Go back to perusal page, then paste " +
+                        "some text and hit the play button!";
+                mSpritzSource = new SimpleSpritzSource( sampleMessage, new Locale("en", "US") );
             }
 
             mSpritzView.rewind();
-            mSpritzView.start(source);
+            mSpritzView.start(mSpritzSource);
 
         } catch (Exception e) {
             Log.d(TAG, "doSpritzing failed. " +  e.getMessage());
