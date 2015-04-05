@@ -12,6 +12,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,13 +29,16 @@ import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 import com.spritzinc.android.SimpleSpritzSource;
 import com.spritzinc.android.SpritzSource;
 import com.spritzinc.android.UrlSpritzSource;
+import com.spritzinc.android.sdk.SeekMode;
 import com.spritzinc.android.sdk.SpritzSDK;
+import com.spritzinc.android.sdk.SpritzViewListener;
 import com.spritzinc.android.sdk.view.SpritzBaseView;
 import com.spritzinc.android.sdk.view.SpritzControlView;
 import com.spritzinc.android.sdk.view.SpritzFullControlView;
 import com.spritzllc.api.common.model.Content;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -144,41 +148,27 @@ public class PerusalSpritzFragment
         m_textToSpeech = null;                // the text to speech engine
     }
 
-    /* Callback for when the TTS initializes */
-    class TTS_OnInitListenerImpl implements TextToSpeech.OnInitListener
-    {
-        @Override
-        public void onInit(int status) {
-            m_bIsTTSEngineInit = (status == TextToSpeech.SUCCESS);
-            if ( m_bUserDidTryTTSBeforeInit ) {
-                m_bUserDidTryTTSBeforeInit = false; // now the variable is invalid anyways
-                if ( m_bIsTTSEngineInit ) {
-                    Toast.makeText(getActivity(),
-                            "TTS Initialized! :)",
-                            Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText( getActivity(),
-                            "TTS Init Failed..",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            // debugging
-            if ( !m_bIsTTSEngineInit ) {
-                Log.d(TAG, "Failed to init TTS engine..");
-            } else {
-                Log.d(TAG, "Text to Speech Initialized");
-            }
-            TTSPostInit();
-        } // end on init
-    };
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, " onCreate");
         super.onCreate(savedInstanceState);
         sqLiteDAO = ((MainActivity)getActivity()).getSqLiteDAO();
         m_textToSpeech = new TextToSpeech(getActivity(), new TTS_OnInitListenerImpl());
+        m_textToSpeech.setOnUtteranceProgressListener( new UtteranceProgressListener() {
+            String expectedid = TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID;
+            @Override
+            public void onStart(String utteranceId) {
+                assert( expectedid.equals(utteranceId) );
+            }
+
+            @Override
+            public void onDone(String utteranceId) {
+                m_bToggleTextToSpeech = false;
+            }
+
+            @Override
+            public void onError(String utteranceId) {  }
+        });
     }
 
     @Override
@@ -215,45 +205,62 @@ public class PerusalSpritzFragment
     private void OnClickTextToSpeech() {
         // TODO: toggle hook text to speech into the output of a spritz transmitter
         // OR Hook spritz into the text to speech input. Maybe a spritz callback per wordo?
-        if ( !m_bIsTTSEngineInit )
-        {
+        if ( !m_bIsTTSEngineInit ) {
             Toast.makeText( getActivity(),
                             "Please try again when TTS is initialized..",
                             Toast.LENGTH_SHORT).show();
             m_bUserDidTryTTSBeforeInit = true;
-        }
-        else
-        {
-            m_bToggleTextToSpeech = !m_bToggleTextToSpeech;
-            if ( m_bToggleTextToSpeech )
-            {
+        } else {
+            m_bToggleTextToSpeech = !m_bToggleTextToSpeech; // TOGGLE
+            if ( m_bToggleTextToSpeech ) {
                 Log.d(TAG, "Text to Speech Enabled");
                 PerformTextToSpeech();
-            }
-            else
-            {
+            } else {
                 Log.d(TAG, "Text to Speech Disabled");
                 StopTextToSpeech();
             }
         }
     }
 
-    private void TTSPostInit()
-    {
-        // use m_textToSpeech
-//        m_textToSpeech.speak("Hey there", TextToSpeech.QUEUE_FLUSH, null);
-    }
+    private void TTSPostInit() { }
 
-    // TODO: attach the spritz to the text to speech engine.. somehow
+    // TODO: attach/stream the spritz to the text to speech engine.. somehow
     private void PerformTextToSpeech() {
         // use m_textToSpeech, mSpritzSource, mSpritzView
+        final int mode = getArguments().getInt(ARG_MODE);
+        if (mode == Perusal.Mode.TEXT.ordinal()) {
+            ttsPlayUtteranceText(mTextSpritz);
+        } else {
+            ttsPlayUtteranceText( mSpritzView.getText() );
+        }
     }
 
     // TODO: halt text to speech
     private void StopTextToSpeech() {
         // use m_textToSpeech, mSpritzSource, mSpritzView
+        m_textToSpeech.stop();
     }
 
+    // Returns true if successfully started speaking. Returns false if the previous
+    // speech was interupted by the current, new, speech.. also returns false if the
+    // new speech was short enough to not "register" or detect speaking was happening
+    public boolean ttsPlayUtteranceText( String text ) {
+        boolean bWasSpeaking = m_textToSpeech.isSpeaking();
+        m_textToSpeech.stop();
+
+        /// Not backwards compatible
+//        Bundle params = null; // new Bundle();
+//        m_textToSpeech.speak( text, TextToSpeech.QUEUE_FLUSH, params,
+//                              TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+
+        /// Backwards compatible
+        HashMap<String, String> hashMap = new HashMap<>();
+        hashMap.put( TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,
+                     TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID );
+        m_textToSpeech.speak( text, TextToSpeech.QUEUE_FLUSH, hashMap );
+        boolean bIsNowSpeaking = m_textToSpeech.isSpeaking();
+        return bIsNowSpeaking && !bWasSpeaking;
+    }
 
     private void updateSpritzSpeed(SpritzBaseView view) {
         int savedSpeed = getSharedPrefs().getInt(PREF_SPEED, -1);
@@ -287,16 +294,12 @@ public class PerusalSpritzFragment
     @Override
     public void onResume() {
         super.onResume();
-
         SpritzSDK.getInstance().addLoginEventListener(this);
         SpritzSDK.getInstance().addLoginStatusChangeListener(this);
-
         if (mTextSpritz != null && !mTextSpritz.isEmpty()) {
             mShouldSavePerusal = getArguments().getBoolean(ARG_SHOULD_SAVE);
-            if ( mShouldSavePerusal ) {
-                // will not create if already exists
+            if ( mShouldSavePerusal )
                 createAddPerusalToDB(sqLiteDAO, mTextSpritz);
-            }
             if ( m_didDetectWearable && m_isWearableSpritzEnabled ){
 
             } else {
@@ -334,30 +337,25 @@ public class PerusalSpritzFragment
                     Toast.LENGTH_SHORT).show();
         } else {
             Log.d(TAG, "error.. couldnt add perusal to DB");
-//            Toast.makeText(getActivity().getBaseContext(),  + " was not added..",
-//                    Toast.LENGTH_SHORT).show();
         }
     }
 
     /// attempts to create a title from the give url string..
     /// returns a string which might be the domain name of the url
     public String makeTitleFromURL( String text ) {
-        String title = extractDomainName( text );
+        String title = extractDomainName(text);
 
-        if ( !title.isEmpty() ) {
-            return title;
-        }
-
-        /// otherwise we need to come up with a way
-        /// of extracting some title from the url
-        String[] firstWords = text.split("//");
-
-        if ( firstWords.length >= 2 ) {
-            title = firstWords[1];
-        } else if ( firstWords.length == 1 ) {
-            title = firstWords[0];
-        } else {
-            title = text;
+        // if there was no noticable domain name
+        // then extract the first few words
+        if ( title.isEmpty() ) {
+            String[] firstWords = text.split("//");
+            if (firstWords.length >= 2) {
+                title = firstWords[1];
+            } else if (firstWords.length == 1) {
+                title = firstWords[0];
+            } else {
+                title = text;
+            }
         }
 
         return title;
@@ -368,7 +366,6 @@ public class PerusalSpritzFragment
     /// by whitespaces)
     public String makeTitleFromText( String text ) {
         String[] firstWords = text.split(" ");
-
         String title = "";
         firstWords = Arrays.copyOfRange( firstWords, 0, 3 );
 
@@ -380,12 +377,8 @@ public class PerusalSpritzFragment
             word = word.replace("\"", "");
             title += Helpers.capitalize( word ) + " ";
         }
-
         if ( title.isEmpty() )
-        {
             title = "<Untitled>";
-        }
-
         return title;
     }
 
@@ -422,10 +415,8 @@ public class PerusalSpritzFragment
                         "some text and hit the play button!";
                 mSpritzSource = new SimpleSpritzSource( sampleMessage, new Locale("en", "US") );
             }
-
             mSpritzView.rewind();
             mSpritzView.start(mSpritzSource);
-
         } catch (Exception e) {
             Log.d(TAG, "doSpritzing failed. " +  e.getMessage());
             success = false;
@@ -435,18 +426,14 @@ public class PerusalSpritzFragment
     }
 
     private SpritzBaseView setupSpritzView(LayoutInflater inflater, View rootView) {
-        mFrameLayoutSpritzContainer
-                = (FrameLayout) rootView.findViewById(R.id.frameLayoutSpritzContainer);
-                // destination view
-
+        mFrameLayoutSpritzContainer = (FrameLayout) rootView.findViewById(R.id.frameLayoutSpritzContainer);
         inflater.inflate(R.layout.fragment_spritz_full,
                 mFrameLayoutSpritzContainer, true);
-                // append source view to dst
 
         mSpritzView = (SpritzBaseView) rootView.findViewById(R.id.spritzView);
-
         if (mSpritzView instanceof SpritzFullControlView) {
-            ((SpritzControlView)mSpritzView).setPopupMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            ((SpritzControlView)mSpritzView).setPopupMenuItemClickListener(
+                    new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     boolean handled = false;
@@ -455,6 +442,8 @@ public class PerusalSpritzFragment
                 }
             });
         }
+        mSpritzView.setSpritzViewListener( new TTS_SpritzViewListenerImpl() );
+
         return mSpritzView;
     }
 
@@ -463,7 +452,6 @@ public class PerusalSpritzFragment
         Log.d(TAG, "On Pause - before calling parent's");
         super.onPause();
         Log.d(TAG, "On Pause - after calling parent's");
-
 
         // Pause the spritz view.
         if(mSpritzView != null) {
@@ -509,7 +497,6 @@ public class PerusalSpritzFragment
             message.append(": ");
             message.append(throwable.getMessage());
         }
-
         builder.setMessage(message.toString());
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
@@ -536,31 +523,104 @@ public class PerusalSpritzFragment
     }
 
 
-    private void updateLoggedInUser() {
+    private void updateLoggedInUser() {  }
 
-//        SpritzUser user = SpritzSDK.getInstance().getLoggedInUser();
-//
-//        Button btnLogin = (Button) mRootView.findViewById(R.id.btnLogin);
-//        TextView tvLoggedInUser = (TextView) mRootView.findViewById(R.id.tvLoggedInUser);
-//
-//        if (user == null) {
-//
-//            tvLoggedInUser.setText("None");
-//            btnLogin.setText("Login");
-//
-//        } else {
-//
-//            StringBuilder userInfo = new StringBuilder();
-//            userInfo.append(user.getUserId());
-//
-//            if (user.getNickname() != null) {
-//                userInfo.append(" (");
-//                userInfo.append(user.getNickname());
-//                userInfo.append(")");
-//            }
-//
-//            tvLoggedInUser.setText(userInfo.toString());
-//            btnLogin.setText("Logout");
-//        }
-    }
+    // Listens to spritz view and should receive notifications during spritzing events
+// for the purpose of determining and capturing the current spritzed word which
+// to TextToSpeech
+    class TTS_SpritzViewListenerImpl implements SpritzViewListener {
+        @Override
+        public boolean onError(String s, Throwable throwable) {
+            return false;
+        }
+
+        @Override
+        public boolean onLoadStart() {
+            return false;
+        }
+
+        @Override
+        public boolean onLoadEnd() {
+            return false;
+        }
+
+        @Override
+        public boolean onLoadFail(String s, Throwable throwable) {
+            return false;
+        }
+
+        @Override
+        public void onStart(int i, int i2, float v, int i3) {
+
+        }
+
+        @Override
+        public void onPause(int i, int i2, float v, int i3) {
+
+        }
+
+        @Override
+        public void onResume(int i, int i2, float v, int i3) {
+
+        }
+
+        @Override
+        public void onGoBackSentence(int i, int i2, float v, int i3, int i4) {
+
+        }
+
+        @Override
+        public void onGoForwardSentence(int i, int i2, float v, int i3, int i4) {
+
+        }
+
+        @Override
+        public void onSeek(int i, int i2, float v, int i3, int i4, SeekMode seekMode) {
+
+        }
+
+        @Override
+        public void onSpritzComplete(int i, int i2, float v, int i3) {
+
+        }
+
+        @Override
+        public void onReset(int i, int i2, float v, int i3) {
+
+        }
+
+        @Override
+        public void onSpeedChange(int i, int i2, float v, int i3, int i4) {
+
+        }
+    };
+
+    /* Callback for when the TTS is initialized */
+    class TTS_OnInitListenerImpl implements TextToSpeech.OnInitListener
+    {
+        @Override
+        public void onInit(int status) {
+            m_bIsTTSEngineInit = (status == TextToSpeech.SUCCESS);
+            if ( m_bUserDidTryTTSBeforeInit ) {
+                m_bUserDidTryTTSBeforeInit = false; // now the variable is invalid anyways
+                if ( m_bIsTTSEngineInit ) {
+                    Toast.makeText(getActivity(),
+                            "TTS Initialized! :)",
+                            Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText( getActivity(),
+                            "TTS Init Failed..",
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            // debugging
+            if ( !m_bIsTTSEngineInit ) {
+                Log.d(TAG, "Failed to init TTS engine..");
+            } else {
+                Log.d(TAG, "Text to Speech Initialized");
+            }
+            TTSPostInit();
+        } // end on init
+    };
 }
