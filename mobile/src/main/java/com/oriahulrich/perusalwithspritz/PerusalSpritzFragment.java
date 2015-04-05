@@ -37,6 +37,7 @@ import com.spritzinc.android.sdk.view.SpritzControlView;
 import com.spritzinc.android.sdk.view.SpritzFullControlView;
 import com.spritzllc.api.common.model.Content;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -81,6 +82,7 @@ public class PerusalSpritzFragment
     private boolean m_didDetectWearable;
     private boolean m_isWearableSpritzEnabled;
 
+    private ArrayList<String> m_textPartitions; // smaller portions of text that the TTS can handle (ie: < 1000 characters each partition)
     private boolean m_bToggleTextToSpeech;      // toggled by user to perform TTS on spritz text
     private boolean m_bIsTTSEngineInit;         // is the engine init
     private boolean m_bUserDidTryTTSBeforeInit; // user attempted TTS before engine init, let user know when ready
@@ -146,12 +148,23 @@ public class PerusalSpritzFragment
         m_bIsTTSEngineInit = false;           // flag for whether or not the engine is init
         m_bUserDidTryTTSBeforeInit = false;   // if true, in onInitListener, let the user know to try again
         m_textToSpeech = null;                // the text to speech engine
+        ArrayList<String> m_textPartitions = new ArrayList<String>();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, " onCreate");
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        Log.d(TAG, "FRAGMENT onCreateView");
+        View rootView = inflater.inflate(R.layout.fragment_spritz, container, false);
+
+        // init members
         sqLiteDAO = ((MainActivity)getActivity()).getSqLiteDAO();
         m_textToSpeech = new TextToSpeech(getActivity(), new TTS_OnInitListenerImpl());
         m_textToSpeech.setOnUtteranceProgressListener( new UtteranceProgressListener() {
@@ -163,20 +176,19 @@ public class PerusalSpritzFragment
 
             @Override
             public void onDone(String utteranceId) {
-                m_bToggleTextToSpeech = false;
+                if ( m_textPartitions.size() == 0 ) {
+                    m_bToggleTextToSpeech = false;
+                } else {
+                    ttsPlayUtteranceText(m_textPartitions.get(0));
+                    m_textPartitions.remove(0);
+                }
             }
 
             @Override
             public void onError(String utteranceId) {  }
         });
-    }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-
-        Log.d(TAG, "FRAGMENT onCreateView");
-        View rootView = inflater.inflate(R.layout.fragment_spritz, container, false);
+        // set up the views
         mRootView = rootView;
         mSpritzView = setupSpritzView(inflater, rootView);
         mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
@@ -224,20 +236,61 @@ public class PerusalSpritzFragment
 
     private void TTSPostInit() { }
 
+    // Returns a list of Partitions, each partition was extracted from the larger
+    // text where each partition was deliminated from another one by a space. O(n)
+    private ArrayList<String> splitTextIntoParitions( String text ) {
+        final int max_char_count = 1000; // (ie: max partition size)
+        ArrayList<String> partitions = new ArrayList<>();
+
+        // split the text and store the cur partition into the list
+        while ( text.length() > max_char_count ) {
+            int end_idx = max_char_count;
+            while(end_idx >= 0 && text.charAt(end_idx) != ' ') {
+                end_idx -= 1; // go backwards until a space is found
+            }
+
+            // push the current head partition
+            String substring = text.substring(0, end_idx).trim();
+            if ( !substring.isEmpty() ) {
+                // normal case
+                partitions.add(substring);
+            } else {
+                // edge case ( partition required is too big, throw exception??)
+                partitions.add( text.substring(0, max_char_count).trim() );
+                end_idx = max_char_count;
+            }
+
+            // remove the cur partition 'duplicate' from the
+            // text and continue on with the rest of the string
+            text = text.substring(end_idx, text.length()-1).trim();
+        }
+        // push back the last bit of left over text
+        if ( !text.isEmpty() ) {
+            partitions.add(text);
+        }
+
+        return partitions;
+    }
+
     // TODO: attach/stream the spritz to the text to speech engine.. somehow
     private void PerformTextToSpeech() {
         // use m_textToSpeech, mSpritzSource, mSpritzView
         final int mode = getArguments().getInt(ARG_MODE);
+        String text;
         if (mode == Perusal.Mode.TEXT.ordinal()) {
-            ttsPlayUtteranceText(mTextSpritz);
+            text = mTextSpritz;
         } else {
-            ttsPlayUtteranceText( mSpritzView.getText() );
+            text = mSpritzView.getText();
         }
+        m_textPartitions = splitTextIntoParitions( text ); // split into chunks
+        ttsPlayUtteranceText( m_textPartitions.get(0) );
+        m_textPartitions.remove(0);
     }
 
     // TODO: halt text to speech
     private void StopTextToSpeech() {
         // use m_textToSpeech, mSpritzSource, mSpritzView
+        m_textPartitions.clear();
         m_textToSpeech.stop();
     }
 
@@ -456,6 +509,7 @@ public class PerusalSpritzFragment
         // Pause the spritz view.
         if(mSpritzView != null) {
             mSpritzView.pause();
+            mSpritzView.reset();
 //            SpritzSDK.getInstance().removeLoginStatusChangeListener(this);
 //            SpritzSDK.getInstance().removeLoginEventListener(this);
         }
@@ -468,6 +522,7 @@ public class PerusalSpritzFragment
         Log.d(TAG, "On Stop - after calling parent's");
         super.onStop();
         if ( mSpritzView != null ) {
+            mSpritzView.pause();
             mSpritzView.reset();
         }
     }

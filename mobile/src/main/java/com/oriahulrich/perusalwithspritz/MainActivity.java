@@ -204,17 +204,20 @@ public class MainActivity extends FragmentActivity
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
     private Book parseEPUB(String path) {
-//        AssetManager assetManager = getAssets();
-
         Book book = null;
-
         try {
-            // find InputStream for book
-            // InputStream epubInputStream = assetManager.open(path);
             InputStream epubInputStream = new URL(path).openStream();
-
-            // Load Book from inputStream
             book = (new EpubReader()).readEpub(epubInputStream);
             if ( book != null ) {
                 Log.i("epublib", "title: " + book.getTitle());

@@ -1,13 +1,13 @@
 .gradle
 
-/.idea/workspace.xml
-/.idea/libraries
+.idea/workspace.xml
+.idea/libraries
 .DS_Store
 
-/local.properties
-/build
-/build/**
-/ProjectAssets
-/ProjectAssets/**
-/Library
-/Library/**
+local.properties
+build
+build/**
+ProjectAssets
+ProjectAssets/**
+Library
+Library/**
