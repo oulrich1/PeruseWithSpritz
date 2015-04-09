@@ -11,3 +11,6 @@ ProjectAssets
 ProjectAssets/**
 Library
 Library/**
+
+*.apk
+mobile/*.apk
