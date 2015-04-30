@@ -462,8 +462,6 @@ public class MainActivity extends FragmentActivity
             // the user shared a url
             fragment = PerusalEditTextFragment
                     .newInstance(position + 1, mURL, mInputMethodState );
-//            int textState = Perusal.Mode.URL.ordinal();
-//            navigateToSpritzFragment(textState, mURL);
         } else if ( mInputMethodState == InputMethodState.IMAGE_SHARE ) {
             // the user shared a raw image
             fragment = PerusalEditTextFragment
@@ -486,7 +484,7 @@ public class MainActivity extends FragmentActivity
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)
-                .commit();
+                .commitAllowingStateLoss();
     }
 
 
@@ -673,7 +671,7 @@ public class MainActivity extends FragmentActivity
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)
-                .commit();
+                .commitAllowingStateLoss();
     }
 
 

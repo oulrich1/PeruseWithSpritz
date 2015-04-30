@@ -54,6 +54,10 @@
             android:name=".Settings.SetPreferencesActivity"
             android:label="@string/action_settings" >
         </activity>
+        <activity
+            android:name=".Settings.SetSpritzPreferencesActivity"
+            android:label="@string/action_settings" >
+        </activity>
     </application>
 
 </manifest>

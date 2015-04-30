@@ -103,9 +103,7 @@ public class RecentPerusalsFragment extends ListFragment {
                 android.R.layout.simple_list_item_multiple_choice,
                 recentPerusalsArrayList );
         listView.setAdapter(recentPerusalsAdapter);
-
         setUpListViewItemClickHandler(listView);
-
         registerForContextMenu(listView);
     }
 

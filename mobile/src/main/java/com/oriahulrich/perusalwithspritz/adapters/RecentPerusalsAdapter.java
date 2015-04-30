@@ -18,7 +18,7 @@ import java.util.ArrayList;
  */
 public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
 
-    private static final String TAG = "***INGREDIENT ADAPTER***: ";
+    private static final String TAG = "***INGREDIENT ADAPTER ";
     private ArrayList<Perusal> recentPerusalArrayList; // used for the view
     private ArrayList<Perusal> recentPerusalArrayListView;  // used for the data
     private StringBuffer recentPerusalTitles;
@@ -51,7 +51,7 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
         recentPerusalArrayListView.clear();
         for (Perusal i : recentPerusalArrayList) {
             recentPerusalArrayListView.add(i);
-            Log.d(TAG, " - - - - - " + i.getTitle() + ", ");
+            Log.d(TAG, " " + i.getTitle() + ", ");
         }
     }
 

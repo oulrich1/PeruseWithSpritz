@@ -9,8 +9,11 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
@@ -20,9 +23,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import com.oriahulrich.perusalwithspritz.Settings.SetSpritzPreferencesActivity;
+import com.oriahulrich.perusalwithspritz.adapters.TextPartitionsAdapter;
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
@@ -72,6 +79,7 @@ public class PerusalSpritzFragment
     private FrameLayout mFrameLayoutSpritzContainer;
     private SpritzSource   mSpritzSource;
     private SpritzBaseView mSpritzView;
+    private int nSpritzViewId; // set kludge note for when preferencs activity is started
 
     /** shared preferences and settings persentence */
     private SharedPreferences mSharedPrefs;
@@ -82,11 +90,19 @@ public class PerusalSpritzFragment
     private boolean m_didDetectWearable;
     private boolean m_isWearableSpritzEnabled;
 
+    private static final int SPRITZ_PREFERENCES_ACTIVITY_REQUEST_CODE = 124;
+    private boolean bDidInitTextPartitions;     // used upon spritz load text event (spritz view lsitener to be exact)
+    private int m_nCurTextPartitionIdx;         // index into the textPartitions
+    private int m_nWordsPerChunk; // ie: per partition
     private ArrayList<String> m_textPartitions; // smaller portions of text that the TTS can handle (ie: < 1000 characters each partition)
     private boolean m_bToggleTextToSpeech;      // toggled by user to perform TTS on spritz text
     private boolean m_bIsTTSEngineInit;         // is the engine init
     private boolean m_bUserDidTryTTSBeforeInit; // user attempted TTS before engine init, let user know when ready
     private TextToSpeech m_textToSpeech;        // the TTS engine
+
+    // list view that contains the text partitions
+    TextPartitionsAdapter mTextPartitionAdapter;
+    ListView mTextPartitionList;
 
     /// For the purpose of extracting the domain name ///
     // http://www.mkyong.com/regular-expressions/domain-name-regular-expression-example/
@@ -137,6 +153,7 @@ public class PerusalSpritzFragment
     }
 
     private void common_construct() {
+        nSpritzViewId = -1;
         mTextSpritz = "";
         mShouldSavePerusal = false;
 
@@ -148,6 +165,9 @@ public class PerusalSpritzFragment
         m_bIsTTSEngineInit = false;           // flag for whether or not the engine is init
         m_bUserDidTryTTSBeforeInit = false;   // if true, in onInitListener, let the user know to try again
         m_textToSpeech = null;                // the text to speech engine
+        m_nWordsPerChunk = 0;
+        m_nCurTextPartitionIdx = 0;           // first text partition
+        bDidInitTextPartitions = false;
         ArrayList<String> m_textPartitions = new ArrayList<String>();
     }
 
@@ -165,35 +185,63 @@ public class PerusalSpritzFragment
         View rootView = inflater.inflate(R.layout.fragment_spritz, container, false);
 
         // init members
-        sqLiteDAO = ((MainActivity)getActivity()).getSqLiteDAO();
-        m_textToSpeech = new TextToSpeech(getActivity(), new TTS_OnInitListenerImpl());
-        m_textToSpeech.setOnUtteranceProgressListener( new UtteranceProgressListener() {
-            String expectedid = TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID;
-            @Override
-            public void onStart(String utteranceId) {
-                assert( expectedid.equals(utteranceId) );
-            }
+        try {
+            sqLiteDAO = ((MainActivity) getActivity()).getSqLiteDAO();
+            m_textToSpeech = new TextToSpeech(getActivity(), new TTS_OnInitListenerImpl());
+            m_textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                String expectedid = TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID;
 
-            @Override
-            public void onDone(String utteranceId) {
-                if ( m_textPartitions.size() == 0 ) {
-                    m_bToggleTextToSpeech = false;
-                } else {
-                    ttsPlayUtteranceText(m_textPartitions.get(0));
-                    m_textPartitions.remove(0);
+                @Override
+                public void onStart(String utteranceId) {
+                    assert (expectedid.equals(utteranceId));
                 }
-            }
 
-            @Override
-            public void onError(String utteranceId) {  }
-        });
+                @Override
+                public void onDone(String utteranceId) {
+                    m_nCurTextPartitionIdx++;
+                    if (m_nCurTextPartitionIdx == m_textPartitions.size()) {
+                        m_bToggleTextToSpeech = false;
+                        m_nCurTextPartitionIdx = 0;
+                        mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
+                    } else {
+                        mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
+                        PerformTextToSpeech(); // knows to perform it on the on the next text partition
+                    }
+                }
 
-        // set up the views
+                @Override
+                public void onError(String utteranceId) {
+                }
+            });
+        } catch(Exception e) {
+            Log.d(TAG, e.getMessage());
+        }
+
+        // set up the spritzing views
         mRootView = rootView;
+        updateWordsPerChunk();
         mSpritzView = setupSpritzView(inflater, rootView);
+        mSpritzView.setReticleLineColor(Color.parseColor(getCurrentReticleLineColor()));
         mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
         setHasOptionsMenu(true);
         return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        Log.d(TAG, "onActivityCreated Start");
+        mTextPartitionList = (ListView) getActivity().findViewById(R.id.spritz_text_sections_listview);
+        mTextPartitionAdapter = new TextPartitionsAdapter(getActivity(), getActivity().getLayoutInflater());
+        mTextPartitionList.setAdapter(mTextPartitionAdapter);
+        mTextPartitionList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                doSpritzingTextPartitions(position);
+            }
+        });
+        mTextPartitionList.setTop(mSpritzView.getBottom() + 1);
+        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -204,14 +252,88 @@ public class PerusalSpritzFragment
     }
 
     @Override
+    public void onSaveInstanceState(Bundle outState) {
+//        outState.putString("WORKAROUND_FOR_BUG_19917_KEY", "WORKAROUND_FOR_BUG_19917_VALUE");
+//        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Log.d(TAG, " onOptionsItemSelected");
         int id = item.getItemId();
         if (id == R.id.action_text_to_speech) {
             OnClickTextToSpeech();
             return true;
+        } else if ( id == R.id.action_spritz_custom_settings) {
+            // Extreme kludge to ensure that Spritz api does not commit a transaction
+            // right after it finishes onSaveInstanceState. Damn it Spritz..
+            nSpritzViewId = mSpritzView.getId();
+            mSpritzView.setId(-1);
+            Intent intent = new Intent();
+            intent.setClass(getActivity().getBaseContext(), SetSpritzPreferencesActivity.class);
+            startActivityForResult(intent, SPRITZ_PREFERENCES_ACTIVITY_REQUEST_CODE);
+           return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == SPRITZ_PREFERENCES_ACTIVITY_REQUEST_CODE) {
+            // reset the view id.. kludge undo..
+            mSpritzView.setId(nSpritzViewId);
+
+            // set the user's preference for the view coloring
+            mSpritzView.setReticleLineColor(Color.parseColor(getCurrentReticleLineColor()));
+
+            // resize the page size (number of words per partition) based on user preference
+            updateTextPartitionsAndAdapter();
+        }
+    }
+
+    // Shared preferences specifically..
+    private String getDefaultReticleLineColor(){
+        Context context = getActivity();
+        return context.getResources().getString(R.string.preference_spritz_reticle_line_color);
+    }
+    private String getCurrentReticleLineColor() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        return  prefs.getString("pre" +
+                "f_spritz_reticle_color", getDefaultReticleLineColor());
+    }
+    private String getDefaultWordsPerChunk(){
+        return getResources().getString(R.string.pref_spritz_default_chunk_size);
+    }
+    private int getPrefWordsPerChunk() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        int wordsPerChunk = 30;
+        try {
+            wordsPerChunk = Integer.parseInt(prefs.getString("pref_spritz_chunk_size", getDefaultWordsPerChunk()));
+        } catch ( NumberFormatException e ) {
+            wordsPerChunk = 30; // just a nice number in case it fails
+            Log.d(TAG, "Exception: " + e.getMessage());
+        } catch ( Exception e ) {
+            wordsPerChunk = 30; // just a nice number in case it fails
+            Log.d(TAG, "Exception: " + e.getMessage());
+        }
+        return wordsPerChunk;
+    }
+
+    // simply updates this's member variable with the value returned from getPrefWordsPerChunk
+    private int updateWordsPerChunk() {
+        m_nWordsPerChunk = getPrefWordsPerChunk();
+        return m_nWordsPerChunk;
+    }
+
+    // simply returns the member variable, regardless of what is in the preferences. make sure that
+    // the variable had been updated with updateWordsPerChunk() or similar..
+    private int getWordsPerChunk() {
+        return m_nWordsPerChunk;
     }
 
     private void OnClickTextToSpeech() {
@@ -236,20 +358,30 @@ public class PerusalSpritzFragment
 
     private void TTSPostInit() { }
 
+
     // Returns a list of Partitions, each partition was extracted from the larger
     // text where each partition was deliminated from another one by a space. O(n)
-    private ArrayList<String> splitTextIntoParitions( String text ) {
-        final int max_char_count = 1000; // (ie: max partition size)
+    // also ensures one space at the most between each word
+    private ArrayList<String> splitTextIntoParitions( String text, int nWordsPerChunk ) {
+        int max_char_count = nWordsPerChunk * 5; // ie: max partition size
         ArrayList<String> partitions = new ArrayList<>();
 
+        // trim out all of the unnecessary spaces so that:
+        // article -> sentence article
+        // sentence -> word space word
+        text = text.trim();
+        text = text.replaceAll("\\s+", " ");
+
         // split the text and store the cur partition into the list
+        // working from the beginning of the string.. end_idx is at
+        // the end of the current partition
         while ( text.length() > max_char_count ) {
             int end_idx = max_char_count;
             while(end_idx >= 0 && text.charAt(end_idx) != ' ') {
                 end_idx -= 1; // go backwards until a space is found
             }
 
-            // push the current head partition
+            // push the current head partition:
             String substring = text.substring(0, end_idx).trim();
             if ( !substring.isEmpty() ) {
                 // normal case
@@ -272,9 +404,7 @@ public class PerusalSpritzFragment
         return partitions;
     }
 
-    // TODO: attach/stream the spritz to the text to speech engine.. somehow
-    private void PerformTextToSpeech() {
-        // use m_textToSpeech, mSpritzSource, mSpritzView
+    String getSpritzText() {
         final int mode = getArguments().getInt(ARG_MODE);
         String text;
         if (mode == Perusal.Mode.TEXT.ordinal()) {
@@ -282,15 +412,17 @@ public class PerusalSpritzFragment
         } else {
             text = mSpritzView.getText();
         }
-        m_textPartitions = splitTextIntoParitions( text ); // split into chunks
-        ttsPlayUtteranceText( m_textPartitions.get(0) );
-        m_textPartitions.remove(0);
+        return text;
+    }
+
+    // TODO: attach/stream the spritz to the text to speech engine.. somehow
+    private void PerformTextToSpeech() {
+        // split into partitions of text
+        ttsPlayUtteranceText(m_textPartitions.get(m_nCurTextPartitionIdx));
     }
 
     // TODO: halt text to speech
     private void StopTextToSpeech() {
-        // use m_textToSpeech, mSpritzSource, mSpritzView
-        m_textPartitions.clear();
         m_textToSpeech.stop();
     }
 
@@ -347,6 +479,7 @@ public class PerusalSpritzFragment
     @Override
     public void onResume() {
         super.onResume();
+        Log.d(TAG, " onResume, doing spritzing soon..");
         SpritzSDK.getInstance().addLoginEventListener(this);
         SpritzSDK.getInstance().addLoginStatusChangeListener(this);
         if (mTextSpritz != null && !mTextSpritz.isEmpty()) {
@@ -356,7 +489,7 @@ public class PerusalSpritzFragment
             if ( m_didDetectWearable && m_isWearableSpritzEnabled ){
 
             } else {
-                doSpritzing( mTextSpritz );
+                doSpritzing(mTextSpritz, getArguments().getInt(ARG_MODE));
             }
         }
     }
@@ -432,6 +565,7 @@ public class PerusalSpritzFragment
         }
         if ( title.isEmpty() )
             title = "<Untitled>";
+        title = title.trim();
         return title;
     }
 
@@ -444,9 +578,25 @@ public class PerusalSpritzFragment
     }
 
     /// ---
+    // takes the index into text partitions array and starts spritzing that index-th text partition.
+    // resets member variable m_nCurTextPartitionIdx to the partition_index specified and updates the adapter
+    // with that selection
+    private void doSpritzingTextPartitions(int partition_index ) {
+        if ( partition_index < 0 ) {
+            Log.d(TAG, "doSpritzingTextPartitions:: negative indecies are not valid");
+            return; // negative indecies are not valid
+        }
+        m_nCurTextPartitionIdx = partition_index;
+        if(m_nCurTextPartitionIdx >= m_textPartitions.size()) {
+            m_nCurTextPartitionIdx = 0;
+        } else {
+            doSpritzing(m_textPartitions.get(m_nCurTextPartitionIdx), Perusal.Mode.TEXT.ordinal());
+        }
+        mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
+    }
 
     // depending on arg_mode, text can be raw text or URL
-    public boolean doSpritzing(String text) {
+    public boolean doSpritzing(String text, int mode) {
         boolean success = true;
 
         if ( mSpritzView == null ){
@@ -455,7 +605,6 @@ public class PerusalSpritzFragment
         }
 
         try {
-            int mode = getArguments().getInt(ARG_MODE);
             if (mode == Perusal.Mode.URL.ordinal()) {
                 String cssSelectors = "p";
                 mSpritzSource = new UrlSpritzSource( text, Content.SelectorType.CSS,
@@ -468,6 +617,7 @@ public class PerusalSpritzFragment
                         "some text and hit the play button!";
                 mSpritzSource = new SimpleSpritzSource( sampleMessage, new Locale("en", "US") );
             }
+            mSpritzView.getReticleLineColor();
             mSpritzView.rewind();
             mSpritzView.start(mSpritzSource);
         } catch (Exception e) {
@@ -487,15 +637,15 @@ public class PerusalSpritzFragment
         if (mSpritzView instanceof SpritzFullControlView) {
             ((SpritzControlView)mSpritzView).setPopupMenuItemClickListener(
                     new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    boolean handled = false;
-                    Toast.makeText(getActivity(), "Not Sure?", Toast.LENGTH_SHORT).show();
-                    return handled;
-                }
-            });
+                        @Override
+                        public boolean onMenuItemClick(MenuItem item) {
+                            boolean handled = false;
+                            Toast.makeText(getActivity(), "Not Sure?", Toast.LENGTH_SHORT).show();
+                            return handled;
+                        }
+                    });
         }
-        mSpritzView.setSpritzViewListener( new TTS_SpritzViewListenerImpl() );
+        mSpritzView.setSpritzViewListener(new TTS_SpritzViewListenerImpl());
 
         return mSpritzView;
     }
@@ -504,12 +654,10 @@ public class PerusalSpritzFragment
     public void onPause() {
         Log.d(TAG, "On Pause - before calling parent's");
         super.onPause();
-        Log.d(TAG, "On Pause - after calling parent's");
-
         // Pause the spritz view.
         if(mSpritzView != null) {
             mSpritzView.pause();
-            mSpritzView.reset();
+//            mSpritzView.reset();
 //            SpritzSDK.getInstance().removeLoginStatusChangeListener(this);
 //            SpritzSDK.getInstance().removeLoginEventListener(this);
         }
@@ -517,13 +665,11 @@ public class PerusalSpritzFragment
 
     @Override
     public void onStop() {
-        Log.d(TAG, "On Stop - before calling parent's");
-        super.onPause();
         Log.d(TAG, "On Stop - after calling parent's");
         super.onStop();
         if ( mSpritzView != null ) {
             mSpritzView.pause();
-            mSpritzView.reset();
+//            mSpritzView.reset();
         }
     }
 
@@ -580,6 +726,17 @@ public class PerusalSpritzFragment
 
     private void updateLoggedInUser() {  }
 
+    private void updateTextPartitionsAndAdapter() {
+        // make text partitions from the text and populate the list of partitions
+        updateWordsPerChunk();
+        m_textPartitions = splitTextIntoParitions(getSpritzText(), getWordsPerChunk());
+        mTextPartitionAdapter.updateData(m_textPartitions);
+        // override spritz playback with the text partitions (sebsets of text). If the original
+        // text was a url then spritz would have loaded that by now and the text is now available
+        // in the partitions adapter
+        doSpritzingTextPartitions(0);
+    }
+
     // Listens to spritz view and should receive notifications during spritzing events
 // for the purpose of determining and capturing the current spritzed word which
 // to TextToSpeech
@@ -606,7 +763,10 @@ public class PerusalSpritzFragment
 
         @Override
         public void onStart(int i, int i2, float v, int i3) {
-
+            if (!bDidInitTextPartitions) {
+                updateTextPartitionsAndAdapter();
+                bDidInitTextPartitions = true;
+            }
         }
 
         @Override
@@ -636,7 +796,8 @@ public class PerusalSpritzFragment
 
         @Override
         public void onSpritzComplete(int i, int i2, float v, int i3) {
-
+            m_nCurTextPartitionIdx++;
+            doSpritzingTextPartitions(m_nCurTextPartitionIdx);
         }
 
         @Override

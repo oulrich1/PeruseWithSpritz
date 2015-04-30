@@ -11,7 +11,7 @@
         <!--android:showAsAction="never" />-->
     <item android:id="@+id/action_about"
         android:title="@string/action_about"
-        android:orderInCategory="100"
+        android:orderInCategory="110"
         android:showAsAction="never" />
 </menu>
     <!--android:icon="@drawable/ic_action_play"-->
