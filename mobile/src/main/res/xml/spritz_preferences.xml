@@ -27,6 +27,21 @@
             android:key="pref_spritz_reticle_color"
             android:title="@string/pref_select_spritz_color_reticle"
             android:entries="@array/colors"
+            android:summary="Color of the box around the current Spritzed word"
+            android:entryValues="@array/colors" />
+
+        <ListPreference
+            android:key="pref_spritz_text_highlight_color"
+            android:title="Spritz Text Highlight Color"
+            android:entries="@array/colors"
+            android:summary="Color of the letter centered by Reticle"
+            android:entryValues="@array/colors" />
+
+        <ListPreference
+            android:key="pref_spritz_word_color"
+            android:title="Spritz Word Color"
+            android:entries="@array/colors"
+            android:summary="Color of the word not centered by Reticle"
             android:entryValues="@array/colors" />
 
         <!--<MultiSelectListPreference-->

@@ -68,17 +68,17 @@
     <!--Spritz Related Strings - Shared Prefs -->
     <string name="pref_spritz_default_chunk_size">31</string>
     <string name="preference_spritz_reticle_line_color">BLACK</string>
+    <string name="pref_spritz_default_word_color">BLACK</string>
     <string name="pref_select_spritz_color_reticle">Reticle Line Color</string>
     <string-array name="colors">
-        <item>BLUE</item>
-        <item>CYAN</item>
-        <item>DKGRAY</item>
-        <item>GRAY</item>
-        <item>GREEN</item>
-        <item>LTGRAY</item>
-        <item>MAGENTA</item>
-        <item>RED</item>
         <item>WHITE</item>
+        <item>BLACK</item>
+        <item>GRAY</item>
+        <item>RED</item>
+        <item>GREEN</item>
+        <item>BLUE</item>
+        <item>MAGENTA</item>
         <item>YELLOW</item>
+        <item>CYAN</item>
     </string-array>
 </resources>

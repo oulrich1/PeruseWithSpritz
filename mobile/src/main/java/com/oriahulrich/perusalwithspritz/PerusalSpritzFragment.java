@@ -231,10 +231,41 @@ public class PerusalSpritzFragment
         mRootView = rootView;
         updateWordsPerChunk();
         mSpritzView = setupSpritzView(inflater, rootView);
-        mSpritzView.setReticleLineColor(Color.parseColor(getCurrentReticleLineColor()));
+        updateSpritzColorsFromPreferences();
         mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
         setHasOptionsMenu(true);
         return rootView;
+    }
+
+    // attempts to getCurrentReticleLineColor and parse the string to an
+    // int color id which spritz will use to set the reticle line color
+    // if this fails then the color defaults to Black
+    private void updateSpritzColorsFromPreferences() {
+        // set the user's preference for the view coloring
+        int color;
+        try {
+            String sColor = getCurrentReticleLineColor();
+            color = Color.parseColor(sColor);
+        } catch ( Exception e ) {
+            color = Color.BLACK;
+        }
+        mSpritzView.setReticleLineColor(color);
+
+        try {
+            String sColor = getCurrentWordColor();
+            color = Color.parseColor(sColor);
+        } catch ( Exception e ) {
+            color = Color.BLACK;
+        }
+        mSpritzView.setTextColor(color);
+
+        try {
+            String sColor = getCurrentTextHighlightColor();
+            color = Color.parseColor(sColor);
+        } catch ( Exception e ) {
+            color = Color.RED;
+        }
+        mSpritzView.setTextHighlightColor(color);
     }
 
     @Override
@@ -294,8 +325,8 @@ public class PerusalSpritzFragment
             // reset the view id.. kludge undo..
             mSpritzView.setId(nSpritzViewId);
 
-            // set the user's preference for the view coloring
-            mSpritzView.setReticleLineColor(Color.parseColor(getCurrentReticleLineColor()));
+            // gets the user's preference and tells spritz to set it's retical color to it
+            updateSpritzColorsFromPreferences();
 
             // resize the page size (number of words per partition) based on user preference
             updateTextPartitionsAndAdapter();
@@ -311,8 +342,27 @@ public class PerusalSpritzFragment
         Context context = getActivity();
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
-        return  prefs.getString("pre" +
-                "f_spritz_reticle_color", getDefaultReticleLineColor());
+        return  prefs.getString("pref_spritz_reticle_color", getDefaultReticleLineColor());
+    }
+    private String getDefaultWordColor(){
+        Context context = getActivity();
+        return context.getResources().getString(R.string.pref_spritz_default_word_color);
+    }
+    private String getCurrentWordColor() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        return  prefs.getString("pref_spritz_word_color", getDefaultWordColor());
+    }
+    private String getDefaultHightlightColor(){
+        Context context = getActivity();
+        return context.getResources().getString(R.string.pref_spritz_default_word_color);
+    }
+    private String getCurrentTextHighlightColor() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        return  prefs.getString("pref_spritz_text_highlight_color", getDefaultHightlightColor());
     }
     private String getDefaultWordsPerChunk(){
         return getResources().getString(R.string.pref_spritz_default_chunk_size);
