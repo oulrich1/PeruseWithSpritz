@@ -100,6 +100,11 @@ public class PerusalSpritzFragment
     private boolean m_bUserDidTryTTSBeforeInit; // user attempted TTS before engine init, let user know when ready
     private TextToSpeech m_textToSpeech;        // the TTS engine
 
+    // get text from article at url, from the spritz view since it parsed it already..
+    // but only do it once and save the text so we can partition it differently and modify it possibly
+    private boolean m_bExtractedArticleTextFromSpritzView;
+    private String m_sArticleText;
+
     // list view that contains the text partitions
     TextPartitionsAdapter mTextPartitionAdapter;
     ListView mTextPartitionList;
@@ -168,6 +173,11 @@ public class PerusalSpritzFragment
         m_nWordsPerChunk = 0;
         m_nCurTextPartitionIdx = 0;           // first text partition
         bDidInitTextPartitions = false;
+
+        // url text gathering
+        m_bExtractedArticleTextFromSpritzView = false;
+        m_sArticleText = "";
+
         ArrayList<String> m_textPartitions = new ArrayList<String>();
     }
 
@@ -311,7 +321,7 @@ public class PerusalSpritzFragment
         Context context = getActivity();
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
-        int wordsPerChunk = 30;
+        int wordsPerChunk;
         try {
             wordsPerChunk = Integer.parseInt(prefs.getString("pref_spritz_chunk_size", getDefaultWordsPerChunk()));
         } catch ( NumberFormatException e ) {
@@ -410,7 +420,11 @@ public class PerusalSpritzFragment
         if (mode == Perusal.Mode.TEXT.ordinal()) {
             text = mTextSpritz;
         } else {
-            text = mSpritzView.getText();
+            if (!m_bExtractedArticleTextFromSpritzView) {
+                m_sArticleText = mSpritzView.getText();
+                m_bExtractedArticleTextFromSpritzView = true;
+            }
+            text = m_sArticleText;
         }
         return text;
     }
@@ -617,7 +631,9 @@ public class PerusalSpritzFragment
                         "some text and hit the play button!";
                 mSpritzSource = new SimpleSpritzSource( sampleMessage, new Locale("en", "US") );
             }
-            mSpritzView.getReticleLineColor();
+            if ( mSpritzView.isStarted() ) {
+                mSpritzView.pause();
+            }
             mSpritzView.rewind();
             mSpritzView.start(mSpritzSource);
         } catch (Exception e) {
@@ -765,8 +781,8 @@ public class PerusalSpritzFragment
         @Override
         public void onStart(int i, int i2, float v, int i3) {
             if (!bDidInitTextPartitions) {
-                updateTextPartitionsAndAdapter();
                 bDidInitTextPartitions = true;
+                updateTextPartitionsAndAdapter();
             }
         }
 

@@ -60,7 +60,7 @@ public class TextPartitionsAdapter extends BaseAdapter {
 
         // since convert view listens in on the holder and it's items,
         // the convert view will get the updates to the view
-        int topBottomExtraPx = 20;
+        int topBottomExtraPx = 25;
         int indicatorHeight = Helpers.getItemHeight(holder.title, nDeviceWidth) + topBottomExtraPx;
         holder.indicator.setHeight(indicatorHeight);
 
