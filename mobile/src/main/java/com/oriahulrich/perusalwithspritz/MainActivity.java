@@ -113,6 +113,9 @@ public class MainActivity extends FragmentActivity
         return sqLiteDAO;
     }
 
+    public void setActionBarTitle(String title) {
+        getActionBar().setTitle(title);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -599,7 +602,7 @@ public class MainActivity extends FragmentActivity
                 break;
             case 2:
                 // mTitle = getString(R.string.title_section2);
-                mTitle = "Recent Perusals";
+                mTitle = "Peruse";
                 break;
             case 3:
                 mTitle = getString(R.string.title_section3);

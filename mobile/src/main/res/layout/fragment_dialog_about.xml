@@ -16,7 +16,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
-        android:text="@string/about_app_name_and_version"
+        android:text="@string/about_app_name"
         android:textSize="24sp"
         app:typeface="roboto_slab_bold"
         android:layout_marginBottom="8dp"

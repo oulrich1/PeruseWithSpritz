@@ -109,8 +109,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="support-v4-22.0.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-base-7.0.0" level="project" />
-    <orderEntry type="library" exported="" name="api-common-1.1.1" level="project" />
     <orderEntry type="library" exported="" name="spritz-util-1.0.3" level="project" />
+    <orderEntry type="library" exported="" name="api-common-1.1.1" level="project" />
     <orderEntry type="library" exported="" name="epublib-core-latest" level="project" />
     <orderEntry type="library" exported="" name="api-client-1.1.1" level="project" />
     <orderEntry type="library" exported="" name="jackson-core-2.4.1" level="project" />

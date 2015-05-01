@@ -193,6 +193,7 @@ public class PerusalSpritzFragment
 
         Log.d(TAG, "FRAGMENT onCreateView");
         View rootView = inflater.inflate(R.layout.fragment_spritz, container, false);
+//        ((MainActivity)getActivity()).setActionBarTitle("Peruse");
 
         // init members
         try {
