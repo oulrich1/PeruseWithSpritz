@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import com.oriahulrich.perusalwithspritz.R;
+import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
     private ArrayList<Perusal> recentPerusalArrayList; // used for the view
     private ArrayList<Perusal> recentPerusalArrayListView;  // used for the data
     private StringBuffer recentPerusalTitles;
+    private int nDeviceWidth;
 
     public StringBuffer getRecentPerusalTitles() {
         return recentPerusalTitles;
@@ -34,13 +36,15 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
         this.recentPerusalArrayListView = recentPerusalArrayListView;
         recentPerusalArrayList = new ArrayList<Perusal>(recentPerusalArrayListView); // original data
         recentPerusalTitles = new StringBuffer();
+        nDeviceWidth = Helpers.getDeviceWidth(context);
     }
 
     /**
      * ViewHolder: caches our TextView and CheckBox
      */
-    static class ViewHolderItem {
-        TextView recentPerusalTitle;
+    private static class ViewHolderItem {
+        public TextView recentPerusalTitle;
+        public TextView indicator;
     }
 
     @Override
@@ -69,8 +73,7 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-
-        final ViewHolderItem viewHolder;
+        ViewHolderItem viewHolder;
 
         if (convertView == null) {
             // inflate the layout
@@ -82,6 +85,7 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
 
             // set up the ViewHolder
             viewHolder = new ViewHolderItem();
+            viewHolder.indicator = (TextView) convertView.findViewById(R.id.recentPerusalItemStateIndicator);
             viewHolder.recentPerusalTitle
                     = (TextView) convertView.findViewById(R.id.recentPerusalItemTitle);
 
@@ -93,29 +97,24 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
             viewHolder = (ViewHolderItem) convertView.getTag();
         }
 
-        // set the indicator based on the perusal "speed" state
-        TextView perusalStateIndicator
-                = (TextView) convertView
-                    .findViewById(R.id.recentPerusalItemStateIndicator);
-
         Perusal perusal = recentPerusalArrayListView.get(position);
 
         switch (perusal.getSpeedState()) {
             case SLOW:
-                perusalStateIndicator.setBackgroundColor(
+                viewHolder.indicator.setBackgroundColor(
                         getContext().getResources().getColor(R.color.green_weak));
                 break;
             case MODERATE:
-                perusalStateIndicator.setBackgroundColor(
+                viewHolder.indicator.setBackgroundColor(
                         getContext().getResources().getColor(R.color.green_med));
                 break;
             case FAST:
-                perusalStateIndicator.setBackgroundColor(
+                viewHolder.indicator.setBackgroundColor(
                         getContext().getResources().getColor(R.color.green_strong));
                 break;
             case VERY_FAST:
             default:
-                perusalStateIndicator.setBackgroundColor(
+                viewHolder.indicator.setBackgroundColor(
                         getContext().getResources().getColor(R.color.blue_weak));
                 break;
         }
@@ -125,101 +124,10 @@ public class RecentPerusalsAdapter extends ArrayAdapter<Perusal> {
             viewHolder.recentPerusalTitle.setText(perusal.getTitle());
         }
 
+        int topBottomExtraPx = 10;
+        int indicatorHeight = Helpers.getItemHeight(viewHolder.recentPerusalTitle, nDeviceWidth) + topBottomExtraPx;
+        viewHolder.indicator.setHeight(indicatorHeight);
+
         return convertView;
     }
-
-//    public void changeIngredientSelectedState(View view, int position){
-//        CheckBox checkBox = (CheckBox) view.findViewById(R.id.ingredientCheckbox);
-//        Ingredient ingredient = ingredientArrayListView.get(position);
-//        ingredient.setSelected(checkBox.isChecked());
-//    }
-
-//    public void itemClickListener(View view, int position) {
-//
-//        Log.d(TAG, "position: " + position + "<- itemClickListener");
-//        Log.d(TAG, "itemClickListener in the adapter!");
-//
-//        // Manually check the checkbox and select the ingredient
-//        CheckBox checkBox = (CheckBox) view.findViewById(R.id.ingredientCheckbox);
-//        checkBox.toggle();
-//
-//        Ingredient ingredient = ingredientArrayListView.get(position);
-//        ingredient.setSelected(checkBox.isChecked());
-//
-//        Log.d(TAG, "INGERDIENT SELECTED: " + ingredient.getIngredientTitle());
-//
-//        // set the list of ingredient titles that we want in the url */
-//        ingredientTitles.delete(0, ingredientTitles.length());
-//
-//        for (Ingredient i : ingredientArrayList) {
-//            if (i.isSelected()) {
-//                String ingredientTitlePrioritized =  i.getIngredientTitle();
-//                switch (i.getSelectedState()){
-//                    case EXCLUDE_STATE:
-//                        ingredientTitlePrioritized = "-" + ingredientTitlePrioritized;
-//                        break;
-//                    case REQUIRED_STATE:
-//                        ingredientTitlePrioritized = "+" + ingredientTitlePrioritized;
-//                        break;
-//                }
-//
-//                ingredientTitlePrioritized = ingredientTitlePrioritized.trim().replace(" ", "+");
-//
-//                if (ingredientTitles.length() == 0) {
-//                    ingredientTitles.append(ingredientTitlePrioritized);
-//                } else if (ingredientTitles.length() > 0) {
-//                    ingredientTitles.append("," + ingredientTitlePrioritized);
-//                }
-//            }
-//        }
-//        Log.d(TAG, "ingredient titles in Checkbox: = " + ingredientTitles);
-//    }
-
-//    @Override
-//    public Filter getFilter() {
-//        return new Filter() {
-//            @Override
-//            protected FilterResults performFiltering(CharSequence constraint) {
-//                Log.d(TAG, "performFiltering");
-//                constraint = constraint.toString().toLowerCase();
-//                FilterResults results = new FilterResults();
-//
-//                if (constraint.toString().length() > 0) {
-//                    for (Ingredient anIngredient : ingredientArrayList) {
-//                        Log.d(TAG, " Original Data.. " + anIngredient.getIngredientTitle() + "... ");
-//                    }
-//
-//                    ArrayList<Ingredient> found = new ArrayList<Ingredient>();
-//                    for (Ingredient ingredient : ingredientArrayList) {
-//                        if (ingredient.getIngredientTitle().toLowerCase().contains(constraint)) {
-//                            found.add(ingredient);
-//                            Log.d(TAG, " View List we want " + ingredient.getIngredientTitle() + ", ");
-//                        }
-//                    }
-//                    results.values = new ArrayList<Ingredient>(found);
-//                    results.count = found.size();
-//                } else {
-//                    results.values = new ArrayList<Ingredient>(ingredientArrayList);
-//                    results.count = ingredientArrayList.size();
-//                }
-//                return results;
-//            }
-//
-//            @Override
-//            protected void publishResults(CharSequence constraint, FilterResults results) {
-//                Log.d(TAG, "publishResults");
-//                ingredientArrayListView.clear();
-//                try {
-//                    for (Ingredient ingredient : (ArrayList<Ingredient>) results.values) {
-//                        Log.d(TAG, " + + + + + " + ingredient.getIngredientTitle() + ", ");
-//                        ingredientArrayListView.add(ingredient);
-//                    }
-//                } catch (NullPointerException e) {
-//                    Log.d(TAG, "HEY " + e.getMessage());
-//                }
-//                notifyDataSetChanged();
-//            }
-//        };
-//    }
-
 }

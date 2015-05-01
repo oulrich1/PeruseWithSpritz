@@ -128,7 +128,7 @@
     <orderEntry type="library" exported="" name="jackson-annotations-2.4.1" level="project" />
     <orderEntry type="library" exported="" name="play-services-wearable-7.0.0" level="project" />
     <orderEntry type="library" exported="" name="jackson-datatype-joda-2.4.1" level="project" />
-    <orderEntry type="library" exported="" name="joda-time-2.2" level="project" />
     <orderEntry type="library" exported="" name="spritz-engine-common-1.0.13" level="project" />
+    <orderEntry type="library" exported="" name="joda-time-2.2" level="project" />
   </component>
 </module>

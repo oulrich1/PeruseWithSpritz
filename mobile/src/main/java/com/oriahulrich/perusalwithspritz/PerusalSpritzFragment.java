@@ -731,6 +731,7 @@ public class PerusalSpritzFragment
         updateWordsPerChunk();
         m_textPartitions = splitTextIntoParitions(getSpritzText(), getWordsPerChunk());
         mTextPartitionAdapter.updateData(m_textPartitions);
+        mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
         // override spritz playback with the text partitions (sebsets of text). If the original
         // text was a url then spritz would have loaded that by now and the text is now available
         // in the partitions adapter

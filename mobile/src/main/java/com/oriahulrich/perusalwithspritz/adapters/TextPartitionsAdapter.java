@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.oriahulrich.perusalwithspritz.R;
+import com.oriahulrich.perusalwithspritz.lib.Helpers;
 
 import java.util.ArrayList;
 
@@ -19,12 +20,14 @@ public class TextPartitionsAdapter extends BaseAdapter {
 
     Context mContext;
     LayoutInflater mInflater;
+    private int nDeviceWidth;
     ArrayList<String> mTextPartitions;
     int m_nCurSelectedPartitionIdx;
 
     public TextPartitionsAdapter(Context context, LayoutInflater inflater) {
         mContext = context;
         mInflater = inflater;
+        nDeviceWidth = Helpers.getDeviceWidth(mContext);
         m_nCurSelectedPartitionIdx = 0;
         mTextPartitions = new ArrayList<String>();
     }
@@ -48,13 +51,18 @@ public class TextPartitionsAdapter extends BaseAdapter {
 
         // set the view holder, to hold the references to the
         // view items, which is tagged by the convert view
-
         holder.indicator.setVisibility(View.INVISIBLE);
         holder.title.setText(mTextPartitions.get(position));
 
         if ( position == m_nCurSelectedPartitionIdx ) {
             holder.indicator.setVisibility(View.VISIBLE);
         }
+
+        // since convert view listens in on the holder and it's items,
+        // the convert view will get the updates to the view
+        int topBottomExtraPx = 20;
+        int indicatorHeight = Helpers.getItemHeight(holder.title, nDeviceWidth) + topBottomExtraPx;
+        holder.indicator.setHeight(indicatorHeight);
 
         return convertView;
     }
