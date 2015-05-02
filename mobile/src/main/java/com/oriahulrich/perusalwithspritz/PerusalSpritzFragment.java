@@ -170,6 +170,7 @@ public class PerusalSpritzFragment
         m_bToggleTextToSpeech = false;        // toggled by the user
         m_bIsTTSEngineInit = false;           // flag for whether or not the engine is init
         m_bUserDidTryTTSBeforeInit = false;   // if true, in onInitListener, let the user know to try again
+        m_bTextToSpeechWasStopped = false;
         m_textToSpeech = null;                // the text to speech engine
         m_nWordsPerChunk = 0;
         m_nCurTextPartitionIdx = 0;           // first text partition
@@ -378,49 +379,30 @@ public class PerusalSpritzFragment
         {
             m_textToSpeech.setPitch(getCurrentTTSPitch());           // nominal = 1
             m_textToSpeech.setSpeechRate(getCurrentTTSSpeechRate()); // nominal = 1
-            float pitch = getCurrentTTSPitch();
-            float speech_rate = getCurrentTTSSpeechRate();
-//            Voice voice;
-//            m_textToSpeech.setVoice(voice)
         }
     }
 
     /// Preference Getters ///
 
-    private float getDefaultTTSPitch(){
-        Context context = getActivity();
-        float val;
-        try {
-            val = Float.parseFloat(context.getResources().getString(R.string.pref_tts_pitch_default));
-        } catch (Exception e) {
-            Log.d(TAG, e.getMessage());
-            val = 1.0f;
-        }
-        return val;
+    private String getDefaultTTSPitch(){
+        return getActivity().getResources().getString(R.string.pref_tts_pitch_default);
     }
     private float getCurrentTTSPitch() {
         Context context = getActivity();
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
-        String val = prefs.getString("pref_tts_pitch", "1.0");
+        String val = prefs.getString("pref_tts_pitch", getDefaultTTSPitch());
         return Float.parseFloat(val);
     }
 
-    private float getDefaultTTSSpeechRate(){
-        float val;
-        try {
-            val = Float.parseFloat(getActivity().getResources().getString(R.string.pref_tts_speech_rate_default));
-        } catch (Exception e) {
-            Log.d(TAG, e.getMessage());
-            val = 1.0f;
-        }
-        return val;
+    private String getDefaultTTSSpeechRate(){
+        return getActivity().getResources().getString(R.string.pref_tts_speech_rate_default);
     }
     private float getCurrentTTSSpeechRate() {
         Context context = getActivity();
         SharedPreferences prefs = PreferenceManager
                 .getDefaultSharedPreferences(context);
-        String val = prefs.getString("pref_tts_speech_rate", "1.0");
+        String val = prefs.getString("pref_tts_speech_rate", getDefaultTTSSpeechRate());
         return Float.parseFloat(val);
     }
 
@@ -477,14 +459,17 @@ public class PerusalSpritzFragment
 
     // simply updates this's member variable with the value returned from getPrefWordsPerChunk
     private int updateWordsPerChunk() {
-        m_nWordsPerChunk = getPrefWordsPerChunk();
-        return m_nWordsPerChunk;
+        setWordsPerChunk(getPrefWordsPerChunk());
+        return getWordsPerChunk();
     }
 
     // simply returns the member variable, regardless of what is in the preferences. make sure that
     // the variable had been updated with updateWordsPerChunk() or similar..
     private int getWordsPerChunk() {
         return m_nWordsPerChunk;
+    }
+    private void setWordsPerChunk(int nWords) {
+       m_nWordsPerChunk = nWords;
     }
 
     private void OnClickTextToSpeech() {
@@ -581,8 +566,8 @@ public class PerusalSpritzFragment
 
     // TODO: halt text to speech
     private void StopTextToSpeech() {
-        m_textToSpeech.stop();
         m_bTextToSpeechWasStopped = true;
+        m_textToSpeech.stop();
     }
 
     // Returns true if successfully started speaking. Returns false if the previous
@@ -601,7 +586,7 @@ public class PerusalSpritzFragment
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put( TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID,
                      TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID );
-        m_textToSpeech.speak( text, TextToSpeech.QUEUE_FLUSH, hashMap );
+        m_textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, hashMap);
         boolean bIsNowSpeaking = m_textToSpeech.isSpeaking();
         return bIsNowSpeaking && !bWasSpeaking;
     }
@@ -893,8 +878,17 @@ public class PerusalSpritzFragment
     private void updateLoggedInUser() {  }
 
     private void updateTextPartitionsAndAdapter() {
-        // make text partitions from the text and populate the list of partitions
+        int prevWordsPerChunk = m_nWordsPerChunk;
         updateWordsPerChunk();
+
+        // check if spritz settings changed essentially
+        if ( prevWordsPerChunk != m_nWordsPerChunk ) {
+            resetPartitionsAndDoSpritzing();
+        }
+    }
+
+    private void resetPartitionsAndDoSpritzing() {
+        // make text partitions from the text and populate the list of partitions
         m_textPartitions = splitTextIntoParitions(getSpritzText(), getWordsPerChunk());
         mTextPartitionAdapter.updateData(m_textPartitions);
         mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
@@ -932,7 +926,8 @@ public class PerusalSpritzFragment
         public void onStart(int i, int i2, float v, int i3) {
             if (!bDidInitTextPartitions) {
                 bDidInitTextPartitions = true;
-                updateTextPartitionsAndAdapter();
+                updateWordsPerChunk();
+                resetPartitionsAndDoSpritzing();
             }
         }
 
