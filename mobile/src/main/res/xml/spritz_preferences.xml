@@ -61,4 +61,29 @@
                 <!--android:layout_height="wrap_content" />-->
 
     </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Text to Speech Settings">
+
+        <EditTextPreference
+            android:defaultValue="@string/pref_tts_pitch_default"
+            android:key="pref_tts_pitch"
+            android:title="Voice Pitch Multiplier"
+            android:textSize="24dp"
+            android:summary="Normal is '1.0'. Larger number is Higher Pitched"
+            android:inputType="numberDecimal"
+            android:dialogTitle="Voice Pitch Multiplier"
+            />
+
+        <EditTextPreference
+            android:defaultValue="@string/pref_tts_pitch_default"
+            android:key="pref_tts_speech_rate"
+            android:title="Voice Speech Rate Multiplier"
+            android:textSize="24dp"
+            android:summary="Normal is '1.0'. Larger number is Faster"
+            android:inputType="numberDecimal"
+            android:dialogTitle="Voice Speech Rate Multiplier"
+            />
+
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -204,6 +204,7 @@ public class PerusalSpritzFragment
         }
 
         createTextToSpeechIfNotNull();
+        updateTextToSpeechSettingsFromPreferences();
 
         // set up the spritzing views
         mRootView = rootView;
@@ -337,6 +338,16 @@ public class PerusalSpritzFragment
             nSpritzViewId = mSpritzView.getId();
             mSpritzView.setId(-1);
             Intent intent = new Intent();
+//            Set<Voice> voices;
+//            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                // only for gingerbread and newer versions
+//                try {
+//                    voices = m_textToSpeech.getVoices();
+//                } catch ( Exception e ) {
+//                    Log.d(TAG, " Can't Get Voices.. " + e.getMessage()); // probably before init..
+//                }
+//                // intent.putExtra("voices", m_textToSpeech.getVoices());
+//            }
             intent.setClass(getActivity().getBaseContext(), SetSpritzPreferencesActivity.class);
             startActivityForResult(intent, SPRITZ_PREFERENCES_ACTIVITY_REQUEST_CODE);
            return true;
@@ -356,7 +367,61 @@ public class PerusalSpritzFragment
 
             // resize the page size (number of words per partition) based on user preference
             updateTextPartitionsAndAdapter();
+
+            // update TTS settings
+            updateTextToSpeechSettingsFromPreferences();
         }
+    }
+
+    private void updateTextToSpeechSettingsFromPreferences() {
+        if (m_textToSpeech != null)
+        {
+            m_textToSpeech.setPitch(getCurrentTTSPitch());           // nominal = 1
+            m_textToSpeech.setSpeechRate(getCurrentTTSSpeechRate()); // nominal = 1
+            float pitch = getCurrentTTSPitch();
+            float speech_rate = getCurrentTTSSpeechRate();
+//            Voice voice;
+//            m_textToSpeech.setVoice(voice)
+        }
+    }
+
+    /// Preference Getters ///
+
+    private float getDefaultTTSPitch(){
+        Context context = getActivity();
+        float val;
+        try {
+            val = Float.parseFloat(context.getResources().getString(R.string.pref_tts_pitch_default));
+        } catch (Exception e) {
+            Log.d(TAG, e.getMessage());
+            val = 1.0f;
+        }
+        return val;
+    }
+    private float getCurrentTTSPitch() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        String val = prefs.getString("pref_tts_pitch", "1.0");
+        return Float.parseFloat(val);
+    }
+
+    private float getDefaultTTSSpeechRate(){
+        float val;
+        try {
+            val = Float.parseFloat(getActivity().getResources().getString(R.string.pref_tts_speech_rate_default));
+        } catch (Exception e) {
+            Log.d(TAG, e.getMessage());
+            val = 1.0f;
+        }
+        return val;
+    }
+    private float getCurrentTTSSpeechRate() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        String val = prefs.getString("pref_tts_speech_rate", "1.0");
+        return Float.parseFloat(val);
     }
 
     // Shared preferences specifically..
@@ -426,10 +491,10 @@ public class PerusalSpritzFragment
         // TODO: toggle hook text to speech into the output of a spritz transmitter
         // OR Hook spritz into the text to speech input. Maybe a spritz callback per wordo?
         if ( !m_bIsTTSEngineInit ) {
-            Toast.makeText( getActivity(),
-                            "Please try again when TTS is initialized..",
-                            Toast.LENGTH_SHORT).show();
             m_bUserDidTryTTSBeforeInit = true;
+            Toast.makeText( getActivity(),
+                    "Text to Speech is still initializing, we'll get back to you when it is ready.",
+                    Toast.LENGTH_SHORT).show();
         } else {
             m_bToggleTextToSpeech = !m_bToggleTextToSpeech; // TOGGLE
             if ( m_bToggleTextToSpeech ) {
@@ -441,6 +506,9 @@ public class PerusalSpritzFragment
             }
         }
     }
+
+    /// End Preference Getters ///
+
 
     private void TTSPostInit() { }
 
@@ -920,11 +988,11 @@ public class PerusalSpritzFragment
                 m_bUserDidTryTTSBeforeInit = false; // now the variable is invalid anyways
                 if ( m_bIsTTSEngineInit ) {
                     Toast.makeText(getActivity(),
-                            "TTS Initialized! :)",
+                            "Text to Speech is Ready!",
                             Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText( getActivity(),
-                            "TTS Init Failed..",
+                            "Text to Speech is Borked.. :(",
                             Toast.LENGTH_SHORT).show();
                 }
             }

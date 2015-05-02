@@ -10,7 +10,7 @@
 
     <!-- Spritz action -->
     <string name="action_spritz_selection">Spritz This!</string>
-    <string name="action_spritz_custom_settings">Spritz Settings</string>
+    <string name="action_spritz_custom_settings">Settings</string>
 
     <!-- In Spritz Fragment, action menu contains a text to speech button -->
     <string name="action_text_to_speech">Text to Speech</string>
@@ -66,6 +66,10 @@
     <string name="preference_page_size_default">25</string>
     <string name="preference_fontsize">24</string>
     <string name="preference_css_selector">p, div, span</string>
+
+    <!-- Text To Speech Strings - for shared pref keys -->
+    <string name="pref_tts_pitch_default">1.0</string>
+    <string name="pref_tts_speech_rate_default">1.0</string>
 
     <!--Spritz Related Strings - Shared Prefs -->
     <string name="pref_spritz_default_chunk_size">31</string>
