@@ -725,24 +725,21 @@ public class PerusalSpritzFragment
     @Override
     public void onPause() {
         Log.d(TAG, "On Pause - before calling parent's");
-        super.onPause();
-        // Pause the spritz view.
+        nSpritzViewId = mSpritzView.getId();
+        mSpritzView.setId(-1); // kludge to prefent a transaction during on save instance state
         if(mSpritzView != null) {
             mSpritzView.pause();
-//            mSpritzView.reset();
-//            SpritzSDK.getInstance().removeLoginStatusChangeListener(this);
-//            SpritzSDK.getInstance().removeLoginEventListener(this);
         }
+        super.onPause();
     }
 
     @Override
     public void onStop() {
         Log.d(TAG, "On Stop - after calling parent's");
-        super.onStop();
         if ( mSpritzView != null ) {
             mSpritzView.pause();
-//            mSpritzView.reset();
         }
+        super.onStop();
     }
 
     public void onBtnPauseClick(View view) {
