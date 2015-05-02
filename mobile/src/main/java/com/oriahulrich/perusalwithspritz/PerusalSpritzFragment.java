@@ -209,15 +209,20 @@ public class PerusalSpritzFragment
 
                 @Override
                 public void onDone(String utteranceId) {
-                    m_nCurTextPartitionIdx++;
-                    if (m_nCurTextPartitionIdx == m_textPartitions.size()) {
-                        m_bToggleTextToSpeech = false;
-                        m_nCurTextPartitionIdx = 0;
-                        mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
-                    } else {
-                        mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
-                        PerformTextToSpeech(); // knows to perform it on the on the next text partition
-                    }
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            m_nCurTextPartitionIdx++;
+                            if (m_nCurTextPartitionIdx == m_textPartitions.size()) {
+                                m_bToggleTextToSpeech = false;
+                                m_nCurTextPartitionIdx = 0;
+                                mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
+                            } else {
+                                mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
+                                PerformTextToSpeech(); // knows to perform it on the on the next text partition
+                            }
+                        }
+                    });
                 }
 
                 @Override
