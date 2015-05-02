@@ -96,6 +96,7 @@ public class PerusalSpritzFragment
     private int m_nWordsPerChunk; // ie: per partition
     private ArrayList<String> m_textPartitions; // smaller portions of text that the TTS can handle (ie: < 1000 characters each partition)
     private boolean m_bToggleTextToSpeech;      // toggled by user to perform TTS on spritz text
+    private boolean m_bTextToSpeechWasStopped;  // set if the user stopped TTS and used to prevent recuring start calls
     private boolean m_bIsTTSEngineInit;         // is the engine init
     private boolean m_bUserDidTryTTSBeforeInit; // user attempted TTS before engine init, let user know when ready
     private TextToSpeech m_textToSpeech;        // the TTS engine
@@ -198,6 +199,28 @@ public class PerusalSpritzFragment
         // init members
         try {
             sqLiteDAO = ((MainActivity) getActivity()).getSqLiteDAO();
+        } catch(Exception e) {
+            Log.d(TAG, e.getMessage());
+        }
+
+        createTextToSpeechIfNotNull();
+
+        // set up the spritzing views
+        mRootView = rootView;
+        updateWordsPerChunk();
+        mSpritzView = setupSpritzView(inflater, rootView);
+        updateSpritzColorsFromPreferences();
+        mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
+        setHasOptionsMenu(true);
+        return rootView;
+    }
+
+    private void createTextToSpeechIfNotNull() {
+        if ( m_textToSpeech != null ) return;
+        createTextToSpeech();
+    }
+    private void createTextToSpeech() {
+        try {
             m_textToSpeech = new TextToSpeech(getActivity(), new TTS_OnInitListenerImpl());
             m_textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                 String expectedid = TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID;
@@ -209,38 +232,35 @@ public class PerusalSpritzFragment
 
                 @Override
                 public void onDone(String utteranceId) {
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            m_nCurTextPartitionIdx++;
-                            if (m_nCurTextPartitionIdx == m_textPartitions.size()) {
-                                m_bToggleTextToSpeech = false;
-                                m_nCurTextPartitionIdx = 0;
-                                mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
-                            } else {
-                                mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
-                                PerformTextToSpeech(); // knows to perform it on the on the next text partition
+                    if ( !m_bTextToSpeechWasStopped ) {
+                        // then we are done because the user stopped TTS, so we dont want to play again
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                m_nCurTextPartitionIdx++;
+                                if (m_nCurTextPartitionIdx == m_textPartitions.size()) {
+                                    m_bToggleTextToSpeech = false;
+                                    m_nCurTextPartitionIdx = 0;
+                                    mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
+                                } else {
+                                    mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
+                                    PerformTextToSpeech(); // knows to perform it on the on the next text partition
+                                }
                             }
-                        }
-                    });
+                        });
+                    } else {
+                        // handled TTS onDone from user-stop action
+                        m_bTextToSpeechWasStopped = false;
+                    }
                 }
 
                 @Override
                 public void onError(String utteranceId) {
                 }
             });
-        } catch(Exception e) {
+        } catch( Exception e ) {
             Log.d(TAG, e.getMessage());
         }
-
-        // set up the spritzing views
-        mRootView = rootView;
-        updateWordsPerChunk();
-        mSpritzView = setupSpritzView(inflater, rootView);
-        updateSpritzColorsFromPreferences();
-        mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
-        setHasOptionsMenu(true);
-        return rootView;
     }
 
     // attempts to getCurrentReticleLineColor and parse the string to an
@@ -494,6 +514,7 @@ public class PerusalSpritzFragment
     // TODO: halt text to speech
     private void StopTextToSpeech() {
         m_textToSpeech.stop();
+        m_bTextToSpeechWasStopped = true;
     }
 
     // Returns true if successfully started speaking. Returns false if the previous
@@ -724,22 +745,30 @@ public class PerusalSpritzFragment
 
     @Override
     public void onPause() {
-        Log.d(TAG, "On Pause - before calling parent's");
+        super.onPause();
+        Log.d(TAG, "On Pause");
+        m_textToSpeech.stop();
         nSpritzViewId = mSpritzView.getId();
         mSpritzView.setId(-1); // kludge to prefent a transaction during on save instance state
         if(mSpritzView != null) {
             mSpritzView.pause();
         }
-        super.onPause();
     }
 
     @Override
     public void onStop() {
-        Log.d(TAG, "On Stop - after calling parent's");
+        super.onStop();
+        Log.d(TAG, "On Stop");
         if ( mSpritzView != null ) {
             mSpritzView.pause();
         }
-        super.onStop();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        m_textToSpeech.shutdown();
+        m_textToSpeech = null;
     }
 
     public void onBtnPauseClick(View view) {

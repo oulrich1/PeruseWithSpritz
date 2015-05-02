@@ -9,7 +9,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 21
 //        versionCode 200124
-        versionName "0.3.3"
+        versionName "0.3.5"
         ndk {
             moduleName "TessWrapperNDKModule"
 //            cFlags "-DANDROID_NDK -D_DEBUG DNULL=0"   // Define some macros
@@ -18,7 +18,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 136
+    defaultConfig.versionCode = 137
 
     productFlavors {
         x86 {
