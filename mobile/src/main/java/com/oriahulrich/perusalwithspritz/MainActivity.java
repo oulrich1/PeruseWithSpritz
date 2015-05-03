@@ -2,7 +2,8 @@ package com.oriahulrich.perusalwithspritz;
 
 // Standard Includes
 
-import android.app.ActionBar;
+//import android.app.ActionBar;
+
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
@@ -11,8 +12,9 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -52,7 +54,7 @@ import nl.siegmann.epublib.epub.EpubReader;
 
 // inspiration : http://www.pageturner-reader.org/
 
-public class MainActivity extends FragmentActivity
+public class MainActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
     // Not important but for leaning purposes
@@ -613,7 +615,7 @@ public class MainActivity extends FragmentActivity
 
     public void restoreActionBar() {
         Log.d(TAG, "ACTIVITY restoreActionBar");
-        ActionBar actionBar = getActionBar();
+        ActionBar actionBar = getSupportActionBar();
         try {
             actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         } catch ( Exception e ) {

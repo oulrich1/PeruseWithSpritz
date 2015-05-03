@@ -1,23 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="red_weak">#c3ff7e74</color>
-    <color name="red_med">#c3ff4f4a</color>
+    <color name="red_weakest">#ffffc1be</color>
+    <color name="red_weak">#ff9494</color>
+    <color name="red_med">#ff5f5d</color>
     <color name="red">#ff0000</color>
-    <color name="green_weak">#7881ff6a</color>
-    <color name="green_med">#bb4bff39</color>
-    <color name="green_strong">#ca0cff08</color>
+    <color name="green_weaker">#ff8eff79</color>
+    <color name="green_weak">#81ff6a</color>
+    <color name="green_med">#4bff39</color>
+    <color name="green_strong">#0cff08</color>
     <color name="orange">#ff5500</color>
     <color name="white">#ffffff</color>
-    <color name="transparent">#00000000</color>
+    <color name="white_yellowed">#fffffde6</color>
+    <color name="white_blued">#ffdcfff5</color>
+    <color name="white_green">#ffd7ffd5</color>
+    <color name="transparent">#000000</color>
     <color name="date_color">#999999</color>
     <color name="black">#000000</color>
+    <color name="gray_weak">#ffbababa</color>
     <color name="gray">#999999</color>
-    <color name="blue_weak">#ff3399ff</color>
-    <color name="blue">#0066cc</color>
     <color name="gold">#e6b121</color>
     <color name="blueback">#99FFFF</color>
+    <color name="blue">#0066cc</color>
+    <color name="blue_hp">#0096d6</color>
     <color name="articlecolor">#3399FF</color>
     <color name="article_title">#3399FF</color>
+    <color name="blue_weak">#3399ff</color>
     <color name="cachecolor">#8ad0e8</color>
 </resources>
 
