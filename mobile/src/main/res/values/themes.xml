@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.CustomActionBarTheme" parent="Theme.AppCompat.Light">
+        <!-- Set AppCompat’s actionBarStyle -->
+
+        <!-- Set AppCompat’s color themeing attrs -->
+        <!-- colorPrimary is used for the default action bar background -->
+        <item name="colorPrimary">@color/blue_hp</item>
+
+        <!-- Status Bar -->
+        <!--<item name="colorPrimaryDark">@color/red_med</item>-->
+
+        <!-- colorAccent is used as the default value for colorControlActivated,
+         which is used to tint widgets -->
+        <item name="colorAccent">#785fd6</item>
+
+        <!-- You can also set colorControlNormal, colorControlActivated
+        colorControlHighlight, and colorSwitchThumbNormal. -->
+
+        <item name="actionBarStyle">@style/CustomActionBar</item>
+    </style>
+
+    <style name="CustomActionBar" parent="@style/Widget.AppCompat.Light.ActionBar.Solid">
+        <item name="android:background">#0096d6</item>
+    </style>
+
+</resources>

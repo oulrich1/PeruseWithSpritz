@@ -17,6 +17,7 @@ import android.preference.PreferenceManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -33,6 +35,7 @@ import com.oriahulrich.perusalwithspritz.adapters.TextPartitionsAdapter;
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 import com.oriahulrich.perusalwithspritz.lib.Helpers;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
+import com.oriahulrich.perusalwithspritz.pojos.TextPartition;
 import com.spritzinc.android.SimpleSpritzSource;
 import com.spritzinc.android.SpritzSource;
 import com.spritzinc.android.UrlSpritzSource;
@@ -94,7 +97,7 @@ public class PerusalSpritzFragment
     private boolean bDidInitTextPartitions;     // used upon spritz load text event (spritz view lsitener to be exact)
     private int m_nCurTextPartitionIdx;         // index into the textPartitions
     private int m_nWordsPerChunk; // ie: per partition
-    private ArrayList<String> m_textPartitions; // smaller portions of text that the TTS can handle (ie: < 1000 characters each partition)
+    private ArrayList<TextPartition> m_textPartitions; // smaller portions of text that the TTS can handle (ie: < 1000 characters each partition)
     private boolean m_bToggleTextToSpeech;      // toggled by user to perform TTS on spritz text
     private boolean m_bTextToSpeechWasStopped;  // set if the user stopped TTS and used to prevent recuring start calls
     private boolean m_bIsTTSEngineInit;         // is the engine init
@@ -180,7 +183,7 @@ public class PerusalSpritzFragment
         m_bExtractedArticleTextFromSpritzView = false;
         m_sArticleText = "";
 
-        ArrayList<String> m_textPartitions = new ArrayList<String>();
+        m_textPartitions = new ArrayList<TextPartition>();
     }
 
     @Override
@@ -211,9 +214,13 @@ public class PerusalSpritzFragment
         mRootView = rootView;
         updateWordsPerChunk();
         mSpritzView = setupSpritzView(inflater, rootView);
+        mSpritzView.setSweeperEnabled(getCurrentSweeperEnableState() == 1);
         updateSpritzColorsFromPreferences();
         mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
         setHasOptionsMenu(true);
+
+        // load the default preference values from the xml
+        PreferenceManager.setDefaultValues(getActivity(), R.xml.spritz_preferences, false);
         return rootView;
     }
 
@@ -294,6 +301,15 @@ public class PerusalSpritzFragment
             color = Color.RED;
         }
         mSpritzView.setTextHighlightColor(color);
+
+        try {
+            String sColor = getCurrentTextHighlightColor();
+            color = Color.parseColor(sColor);
+        } catch ( Exception e ) {
+            color = Color.RED;
+        }
+
+        mSpritzView.setSweeperEnabled(getCurrentSweeperEnableState() == 1);
     }
 
     @Override
@@ -310,7 +326,80 @@ public class PerusalSpritzFragment
             }
         });
         mTextPartitionList.setTop(mSpritzView.getBottom() + 1);
+        registerForContextMenu(mTextPartitionList);
         super.onActivityCreated(savedInstanceState);
+    }
+
+    /* created when we long hold a specific item */
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+                                    ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater inflater = getActivity().getMenuInflater();
+        inflater.inflate(R.menu.context_menu_item, menu);
+    }
+
+    /* When an item is selected in the context menu */
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo itemInfo
+                = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        if (!getUserVisibleHint()) {
+            return false;
+        }
+
+        switch (item.getItemId()) {
+            case R.id.actionItemEdit:
+                return editTextPartition(itemInfo.position);
+            case R.id.actionItemDelete:
+                return removeTextPartition(itemInfo.position);
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+    private boolean editTextPartition(int position) {
+        final TextPartition partition = (TextPartition) mTextPartitionAdapter.getItem(position);
+        final String oldTitle = partition.getText();
+        final int pos = position;
+
+        /* show dialog - get new title */
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        View edit = View.inflate(getActivity(), R.layout.edit_text, null);
+
+        final EditText perusalTitleInputEditText = (EditText) edit.findViewById(R.id.item_edit_text);
+        perusalTitleInputEditText.setText(oldTitle);
+        perusalTitleInputEditText.setSelection(0);
+
+        builder.setTitle("Edit Text");
+        builder.setView(edit);
+        builder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String text = perusalTitleInputEditText.getText().toString();
+                mTextPartitionAdapter.setItem(pos, new TextPartition(text));
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+//        Dialog d = builder.create(); // modaless??
+//        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+//        lp.copyFrom(d.getWindow().getAttributes());
+//        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+//        lp.height = WindowManager.LayoutParams.MATCH_PARENT;
+//        d.show();
+//        d.getWindow().setAttributes(lp);
+        return true;
+    }
+    private boolean removeTextPartition(int position) {
+        mTextPartitionAdapter.remove(position);
+        return true;
     }
 
     @Override
@@ -383,6 +472,25 @@ public class PerusalSpritzFragment
     }
 
     /// Preference Getters ///
+    private String getDefaultSweeperEnableState() { // 0 or 1
+        return getActivity().getResources().getString(
+                R.string.pref_spritz_focus_sweeping_animation_default);
+    }
+    private int getCurrentSweeperEnableState() {
+        Context context = getActivity();
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(context);
+        String val = prefs.getString("pref_spritz_focus_sweeping_animation",
+                getDefaultSweeperEnableState());
+
+        if ( val != null ) {
+            if (val.equals("Enable"))
+                return 1;
+            else if (val.equals("Disable"))
+                return 0;
+        }
+        return -1;
+    }
 
     private String getDefaultTTSPitch(){
         return getActivity().getResources().getString(R.string.pref_tts_pitch_default);
@@ -501,9 +609,10 @@ public class PerusalSpritzFragment
     // Returns a list of Partitions, each partition was extracted from the larger
     // text where each partition was deliminated from another one by a space. O(n)
     // also ensures one space at the most between each word
-    private ArrayList<String> splitTextIntoParitions( String text, int nWordsPerChunk ) {
-        int max_char_count = nWordsPerChunk * 5; // ie: max partition size
-        ArrayList<String> partitions = new ArrayList<>();
+    private ArrayList<TextPartition> splitTextIntoParitions( String text, int nWordsPerChunk ) {
+        int max_char_count = nWordsPerChunk * 5;                 // ie: max partition size
+        TextPartition partition = null;
+        ArrayList<TextPartition> partitions = new ArrayList<>(); // return array of partitions
 
         // trim out all of the unnecessary spaces so that:
         // article -> sentence article
@@ -520,16 +629,20 @@ public class PerusalSpritzFragment
                 end_idx -= 1; // go backwards until a space is found
             }
 
+            // reference to a shiny new partition
+            partition = new TextPartition();
+
             // push the current head partition:
             String substring = text.substring(0, end_idx).trim();
             if ( !substring.isEmpty() ) {
                 // normal case
-                partitions.add(substring);
+                partition.setText(substring);
             } else {
                 // edge case ( partition required is too big, throw exception??)
-                partitions.add( text.substring(0, max_char_count).trim() );
+                partition.setText(text.substring(0, max_char_count).trim());
                 end_idx = max_char_count;
             }
+            partitions.add(partition);
 
             // remove the cur partition 'duplicate' from the
             // text and continue on with the rest of the string
@@ -537,7 +650,9 @@ public class PerusalSpritzFragment
         }
         // push back the last bit of left over text
         if ( !text.isEmpty() ) {
-            partitions.add(text);
+            partition = new TextPartition();
+            partition.setText(text);
+            partitions.add(partition);
         }
 
         return partitions;
@@ -561,7 +676,7 @@ public class PerusalSpritzFragment
     // TODO: attach/stream the spritz to the text to speech engine.. somehow
     private void PerformTextToSpeech() {
         // split into partitions of text
-        ttsPlayUtteranceText(m_textPartitions.get(m_nCurTextPartitionIdx));
+        ttsPlayUtteranceText(m_textPartitions.get(m_nCurTextPartitionIdx).getText());
     }
 
     // TODO: halt text to speech
@@ -734,7 +849,8 @@ public class PerusalSpritzFragment
         if(m_nCurTextPartitionIdx >= m_textPartitions.size()) {
             m_nCurTextPartitionIdx = 0;
         } else {
-            doSpritzing(m_textPartitions.get(m_nCurTextPartitionIdx), Perusal.Mode.TEXT.ordinal());
+            doSpritzing(m_textPartitions.get(m_nCurTextPartitionIdx).getText(),
+                    Perusal.Mode.TEXT.ordinal());
         }
         mTextPartitionAdapter.setCurrentSelection(m_nCurTextPartitionIdx);
     }

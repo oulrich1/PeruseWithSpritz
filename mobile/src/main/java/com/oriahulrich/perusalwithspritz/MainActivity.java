@@ -514,12 +514,6 @@ public class MainActivity extends ActionBarActivity
             Toast.makeText(this, "Camera not detected..", Toast.LENGTH_SHORT).show();
             return;
         }
-
-//        Toast.makeText(this, "OCR Disabled", Toast.LENGTH_SHORT).show();
-//        return;
-
-//        Log.d(TAG, " About to start a camera intent and save the picture and OCR it.. ");
-
         // create picture file and take picture
         // when the picture is finished the rest of
         // the ocr/spritzing logic is handled..
@@ -554,7 +548,7 @@ public class MainActivity extends ActionBarActivity
                         .replace(R.id.container, fragment)
                         .commit();
 
-            } else if (resultCode == RESULT_CANCELED) {
+            } else if (resultCode == RESULT_CANCELED) { // in these cases just move along..
             } else {
             }
         }
@@ -572,6 +566,8 @@ public class MainActivity extends ActionBarActivity
                 photoFile = Helpers.createUniqueImageFile();
             } catch (IOException e) {
                 Log.d(TAG, "image file exception.. " + e.getMessage());
+                Toast.makeText(this, "Failed: Permission Denied",
+                        Toast.LENGTH_SHORT).show();
                 photoFile = null;
             }
 

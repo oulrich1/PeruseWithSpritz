@@ -1,0 +1,18 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    >
+
+    <EditText
+        android:id="@+id/item_edit_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:padding="20dp"
+        android:longClickable="true"
+        android:gravity="top"
+        android:hint="This Partition is Empty"
+        android:editable="true"
+        android:layout_gravity="center_horizontal" />
+
+</LinearLayout>

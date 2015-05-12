@@ -12,7 +12,7 @@
         android:padding="20dp"
         android:longClickable="true"
         android:gravity="top"
-        android:hint="Paste Text Here!"
+        android:hint="@string/hint_peruse_edit_text"
         android:editable="true"
         android:layout_gravity="center_horizontal" />
 

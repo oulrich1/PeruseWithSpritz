@@ -4,9 +4,12 @@
     <string name="app_name">Perusal</string>
     <string name="title_section1">Peruse</string>
     <string name="title_section2">Recent</string>
-    <string name="title_section3">OCR</string>
+    <string name="title_section3">Text Recognition</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <!-- Hint for the scree nthat lets the user type or paste text to spritz -->
+    <string name="hint_peruse_edit_text">Paste Text Here! You can also share Web Pages containing the text you want to read with the \'Perusal\' App!</string>
 
     <!-- Spritz action -->
     <string name="action_spritz_selection">Spritz This!</string>
@@ -14,6 +17,10 @@
 
     <!-- In Spritz Fragment, action menu contains a text to speech button -->
     <string name="action_text_to_speech">Text to Speech</string>
+
+    <!-- common strings -->
+    <string name="action_item_edit">Edit</string>
+    <string name="action_item_delete">Delete</string>
 
     <!--Recent perusals -->
     <string name="action_recent_perusal_rename_title">Rename</string>
@@ -70,9 +77,10 @@
     <!-- Text To Speech Strings - for shared pref keys -->
     <string name="pref_tts_pitch_default">1.0</string>
     <string name="pref_tts_speech_rate_default">1.0</string>
+    <string name="pref_spritz_focus_sweeping_animation_default">Disable</string>
 
     <!--Spritz Related Strings - Shared Prefs -->
-    <string name="pref_spritz_default_chunk_size">31</string>
+    <string name="pref_spritz_default_chunk_size">50</string>
     <string name="preference_spritz_reticle_line_color">BLACK</string>
     <string name="pref_spritz_default_word_color">BLACK</string>
     <string name="pref_select_spritz_color_reticle">Reticle Line Color</string>
@@ -87,4 +95,17 @@
         <item>YELLOW</item>
         <item>CYAN</item>
     </string-array>
+
+    <string-array name="_boolean_str_">
+        <item>False</item>
+        <item>True</item>
+    </string-array>
+    <string-array name="_boolean_enable_disable_">
+        <item>Disable</item>
+        <item>Enable</item>
+    </string-array>
+    <integer-array name="_boolean_">
+        <item>0</item>
+        <item>1</item>
+    </integer-array>
 </resources>

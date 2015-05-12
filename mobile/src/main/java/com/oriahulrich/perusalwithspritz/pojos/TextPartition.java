@@ -4,6 +4,10 @@ public class TextPartition {
     public TextPartition() {
         init();
     }
+    public TextPartition(String text) {
+        init();
+        setText(text);
+    }
 
     private void init() {
         setText("");

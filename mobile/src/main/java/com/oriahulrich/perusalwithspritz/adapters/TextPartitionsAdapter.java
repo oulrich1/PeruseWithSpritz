@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.oriahulrich.perusalwithspritz.R;
 import com.oriahulrich.perusalwithspritz.lib.Helpers;
+import com.oriahulrich.perusalwithspritz.pojos.TextPartition;
 
 import java.util.ArrayList;
 
@@ -21,7 +22,7 @@ public class TextPartitionsAdapter extends BaseAdapter {
     Context mContext;
     LayoutInflater mInflater;
     private int nDeviceWidth;
-    ArrayList<String> mTextPartitions;
+    ArrayList<TextPartition> mTextPartitions;
     int m_nCurSelectedPartitionIdx;
 
     public TextPartitionsAdapter(Context context, LayoutInflater inflater) {
@@ -29,7 +30,7 @@ public class TextPartitionsAdapter extends BaseAdapter {
         mInflater = inflater;
         nDeviceWidth = Helpers.getDeviceWidth(mContext);
         m_nCurSelectedPartitionIdx = 0;
-        mTextPartitions = new ArrayList<String>();
+        mTextPartitions = new ArrayList<TextPartition>();
     }
 
     /// im guessing that convert view is the recycled view..
@@ -52,7 +53,7 @@ public class TextPartitionsAdapter extends BaseAdapter {
         // set the view holder, to hold the references to the
         // view items, which is tagged by the convert view
         holder.indicator.setVisibility(View.INVISIBLE);
-        holder.title.setText(mTextPartitions.get(position));
+        holder.title.setText(mTextPartitions.get(position).getText());
 
         if ( position == m_nCurSelectedPartitionIdx ) {
             holder.indicator.setVisibility(View.VISIBLE);
@@ -77,6 +78,29 @@ public class TextPartitionsAdapter extends BaseAdapter {
         return mTextPartitions.get(position);
     }
 
+    public void setItem(int position, TextPartition partition) {
+        if(position < 0 || position > mTextPartitions.size()) return;
+        mTextPartitions.remove(position);
+        mTextPartitions.add(position, partition);
+        notifyDataSetChanged();
+    }
+
+    public void remove(TextPartition object) {
+        mTextPartitions.remove(object);
+        notifyDataSetChanged();
+    }
+    public void remove(int position) {
+        mTextPartitions.remove(position);
+        notifyDataSetChanged();
+    }
+
+    // removes all items from the adapter
+    public void removeAll() {
+        mTextPartitions.clear();
+        notifyDataSetChanged();
+    }
+
+
     @Override
     public long getItemId(int position) {
         return (long) position;
@@ -92,7 +116,7 @@ public class TextPartitionsAdapter extends BaseAdapter {
         public TextView  title;
     }
 
-    public void updateData(ArrayList<String> textPartitions) {
+    public void updateData(ArrayList<TextPartition> textPartitions) {
         mTextPartitions = textPartitions;
         notifyDataSetChanged();
     }

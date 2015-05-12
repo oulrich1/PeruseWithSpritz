@@ -4,12 +4,12 @@
         android:title="Spritz Settings">
 
         <EditTextPreference
-            android:defaultValue="@string/pref_spritz_default_chunk_size"
             android:key="pref_spritz_chunk_size"
             android:title="Words Per Spritz Chunk"
             android:textSize="24dp"
             android:summary="Set the number of words in each text partition, larger means less cognitive breaks"
             android:inputType="number"
+            android:defaultValue="@string/pref_spritz_default_chunk_size"
             android:dialogTitle="Spritz Chunk Size"
             />
 
@@ -28,6 +28,7 @@
             android:title="@string/pref_select_spritz_color_reticle"
             android:entries="@array/colors"
             android:summary="Color of the box around the current Spritzed word"
+            android:defaultValue="BLACK"
             android:entryValues="@array/colors" />
 
         <ListPreference
@@ -35,6 +36,7 @@
             android:title="Spritz Text Highlight Color"
             android:entries="@array/colors"
             android:summary="Color of the letter centered by Reticle"
+            android:defaultValue="RED"
             android:entryValues="@array/colors" />
 
         <ListPreference
@@ -42,7 +44,16 @@
             android:title="Spritz Word Color"
             android:entries="@array/colors"
             android:summary="Color of the word not centered by Reticle"
+            android:defaultValue="BLACK"
             android:entryValues="@array/colors" />
+
+        <ListPreference
+            android:key="pref_spritz_focus_sweeping_animation"
+            android:title="Spritz Focus Animation - Enable/Disable"
+            android:entries="@array/_boolean_enable_disable_"
+            android:summary="Enable/Disable the eye focusing animation"
+            android:defaultValue="@string/pref_spritz_focus_sweeping_animation_default"
+            android:entryValues="@array/_boolean_enable_disable_" />
 
         <!--<MultiSelectListPreference-->
             <!--android:dialogTitle="@string/preference_spritz_reticle_line_colors_dialog_title"-->

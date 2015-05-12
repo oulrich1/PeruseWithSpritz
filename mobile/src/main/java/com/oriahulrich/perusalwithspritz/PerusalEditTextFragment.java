@@ -151,8 +151,7 @@ public class PerusalEditTextFragment extends Fragment {
         @Override
         public void run() {
             int textState = Perusal.Mode.TEXT.ordinal();
-            ((MainActivity)getActivity())
-                    .navigateToSpritzFragment(textState, mText);
+            ((MainActivity)getActivity()).navigateToSpritzFragment(textState, mText);
             mHandlerNavSpritzOnURL.removeCallbacks(mRunnableDoSpritzPostOcr);
         }
     };
@@ -199,7 +198,7 @@ public class PerusalEditTextFragment extends Fragment {
                 }
             } else  {
                 Toast.makeText( getActivity(),
-                        "Ocr is disabled for now..",
+                        "Text Recognition is disabled for now..",
                         Toast.LENGTH_SHORT).show();
                 mText = "";
             }
@@ -308,9 +307,6 @@ public class PerusalEditTextFragment extends Fragment {
             return "";
         }
 
-//        Toast.makeText(this, "This will take a few seconds..",
-//                       Toast.LENGTH_LONG).show();
-
         Ocr ocr = new Ocr( getActivity() );
 
         Bitmap bitmap;
@@ -336,7 +332,7 @@ public class PerusalEditTextFragment extends Fragment {
 //        findViewById(R.id.container).setBackgroundDrawable( new BitmapDrawable(bitmap) );
 
         if ( !result.isValid ) {
-            Toast.makeText(getActivity(), "Ocr Failed", Toast.LENGTH_LONG).show();
+            Toast.makeText(getActivity(), "Text Recognition Failed", Toast.LENGTH_LONG).show();
             return ""; // invalid text
         } else {
 

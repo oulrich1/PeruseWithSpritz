@@ -2,23 +2,11 @@ package com.oriahulrich.perusalwithspritz.lib;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 
-import com.googlecode.tesseract.android.TessBaseAPI;    // for tesseract api
-import com.googlecode.tesseract.android.ResultIterator; // for results
-import com.googlecode.tesseract.android.PageIterator;   // for pages
-
-import com.googlecode.leptonica.android.Pix;            // this is their image class
-import com.googlecode.leptonica.android.JpegIO;         //
-import com.googlecode.leptonica.android.ReadFile;
-import com.googlecode.leptonica.android.WriteFile;
-import com.googlecode.leptonica.android.Box;
+import com.googlecode.tesseract.android.TessBaseAPI;
 import com.oriahulrich.perusalwithspritz.Storage.CachedAssets;
-
-import java.util.BitSet;
 
 /**
  * Created by oriahulrich on 12/20/14.
@@ -37,10 +25,14 @@ public class Ocr {
         }
     }
 
-//    static {
+    static {
 //        System.loadLibrary("lept");
 //        System.loadLibrary("tess");
-//    }
+//        if (!OpenCVLoader.initDebug()) {
+//            // Handle initialization error
+//            Log.d("","OpenCV Init Error");
+//        }
+    }
 
     public static final String TAG = "Ocr";
 
@@ -81,24 +73,23 @@ public class Ocr {
 
     public Result performOcr() {
         Result result = new Result();
-
-        // invalid image
-        if ( mImageBitmap == null ) {
-            result.text = "Image not set..";
-            result.isValid = false;
-            return result;
-        }
+        result.isValid = false;
 
         // initialization
         m_baseApi = getTessInstance();
         if ( !initTesseract() ) {
-            result.text = "Tess failed to init";
-            result.isValid = false;
+            result.text = "Tess failed to init, or disabled";
+            return result;
+        }
+
+        // invalid image
+        if ( mImageBitmap == null ) {
+            result.text = "Image not set..";
             return result;
         }
 
         // filtering
-//        mImageBitmap = Filter.doFiltering(mImageBitmap);
+        mImageBitmap = Filter.doFiltering(mImageBitmap);
 
         // recognition
         try {
@@ -109,11 +100,8 @@ public class Ocr {
         } catch (Exception e) {
             Log.d(TAG, "Tesseract Exception: " + e.getMessage());
             result.text = "Error performing tesseract..";
-            result.isValid = false;
             return result;
         }
-
-
         return result;
     }
 
@@ -131,8 +119,8 @@ public class Ocr {
         m_baseApi = getTessInstance();
     }
 
-    private boolean initTesseract() {
-
+    private boolean initTesseract()
+    {
         if ( mIsTessInit ) {
             return true;
         }
