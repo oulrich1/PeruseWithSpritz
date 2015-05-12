@@ -36,7 +36,7 @@
             android:title="Spritz Text Highlight Color"
             android:entries="@array/colors"
             android:summary="Color of the letter centered by Reticle"
-            android:defaultValue="RED"
+            android:defaultValue="@string/pref_spritz_default_highlight_color"
             android:entryValues="@array/colors" />
 
         <ListPreference

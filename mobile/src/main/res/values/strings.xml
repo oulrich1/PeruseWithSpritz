@@ -83,6 +83,7 @@
     <string name="pref_spritz_default_chunk_size">50</string>
     <string name="preference_spritz_reticle_line_color">BLACK</string>
     <string name="pref_spritz_default_word_color">BLACK</string>
+    <string name="pref_spritz_default_highlight_color">RED</string>
     <string name="pref_select_spritz_color_reticle">Reticle Line Color</string>
     <string-array name="colors">
         <item>WHITE</item>

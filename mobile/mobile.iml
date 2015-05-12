@@ -115,8 +115,8 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="spritz-util-1.0.3" level="project" />
     <orderEntry type="library" exported="" name="api-common-1.1.1" level="project" />
+    <orderEntry type="library" exported="" name="spritz-util-1.0.3" level="project" />
     <orderEntry type="library" exported="" name="epublib-core-latest" level="project" />
     <orderEntry type="library" exported="" name="api-client-1.1.1" level="project" />
     <orderEntry type="library" exported="" name="jackson-core-2.4.1" level="project" />
@@ -138,6 +138,5 @@
     <orderEntry type="library" exported="" name="jackson-datatype-joda-2.4.1" level="project" />
     <orderEntry type="library" exported="" name="joda-time-2.2" level="project" />
     <orderEntry type="library" exported="" name="spritz-engine-common-1.0.13" level="project" />
-    <orderEntry type="module" module-name="opencv" exported="" />
   </component>
 </module>

@@ -89,7 +89,7 @@ public class Ocr {
         }
 
         // filtering
-        mImageBitmap = Filter.doFiltering(mImageBitmap);
+//        mImageBitmap = Filter.doFiltering(mImageBitmap);
 
         // recognition
         try {

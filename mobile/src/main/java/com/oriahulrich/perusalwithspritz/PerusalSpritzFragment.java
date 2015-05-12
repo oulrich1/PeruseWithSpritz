@@ -214,7 +214,6 @@ public class PerusalSpritzFragment
         mRootView = rootView;
         updateWordsPerChunk();
         mSpritzView = setupSpritzView(inflater, rootView);
-        mSpritzView.setSweeperEnabled(getCurrentSweeperEnableState() == 1);
         updateSpritzColorsFromPreferences();
         mTextSpritz = getArguments().getString(ARG_SPRITZ_TEXT);
         setHasOptionsMenu(true);
@@ -301,14 +300,6 @@ public class PerusalSpritzFragment
             color = Color.RED;
         }
         mSpritzView.setTextHighlightColor(color);
-
-        try {
-            String sColor = getCurrentTextHighlightColor();
-            color = Color.parseColor(sColor);
-        } catch ( Exception e ) {
-            color = Color.RED;
-        }
-
         mSpritzView.setSweeperEnabled(getCurrentSweeperEnableState() == 1);
     }
 
@@ -537,7 +528,7 @@ public class PerusalSpritzFragment
     }
     private String getDefaultHightlightColor(){
         Context context = getActivity();
-        return context.getResources().getString(R.string.pref_spritz_default_word_color);
+        return context.getResources().getString(R.string.pref_spritz_default_highlight_color);
     }
     private String getCurrentTextHighlightColor() {
         Context context = getActivity();
