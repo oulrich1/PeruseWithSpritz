@@ -80,23 +80,39 @@ public class TextPartitionsAdapter extends BaseAdapter {
 
     public void setItem(int position, TextPartition partition) {
         if(position < 0 || position > mTextPartitions.size()) return;
-        mTextPartitions.remove(position);
-        mTextPartitions.add(position, partition);
+        mTextPartitions.set(position, partition);
         notifyDataSetChanged();
     }
 
+    private void onRemoveItem() {
+    }
+
     public void remove(TextPartition object) {
-        mTextPartitions.remove(object);
-        notifyDataSetChanged();
+        remove(mTextPartitions.indexOf(object));
     }
     public void remove(int position) {
         mTextPartitions.remove(position);
+
+        // true if the item to delete is the last item in the list
+        boolean bIsRemoveCurSpritzLastItem =
+                (m_nCurSelectedPartitionIdx == position) &&
+                (position == mTextPartitions.size()-1);
+
+        if(m_nCurSelectedPartitionIdx > position || bIsRemoveCurSpritzLastItem)  {
+            m_nCurSelectedPartitionIdx -= 1;
+        }
+        // else don't decrement current spritz index if the item to delete is
+        // the current spritzing item (Since we want the index to reference the
+        // next item to read not the previous one) .. also definitely don't
+        // decrement index if the item to delete is past the item current selected..
+
         notifyDataSetChanged();
     }
 
     // removes all items from the adapter
     public void removeAll() {
         mTextPartitions.clear();
+        m_nCurSelectedPartitionIdx = -1;
         notifyDataSetChanged();
     }
 

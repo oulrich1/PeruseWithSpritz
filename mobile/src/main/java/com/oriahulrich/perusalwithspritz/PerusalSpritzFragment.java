@@ -379,13 +379,6 @@ public class PerusalSpritzFragment
         });
 
         builder.show();
-//        Dialog d = builder.create(); // modaless??
-//        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
-//        lp.copyFrom(d.getWindow().getAttributes());
-//        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
-//        lp.height = WindowManager.LayoutParams.MATCH_PARENT;
-//        d.show();
-//        d.getWindow().setAttributes(lp);
         return true;
     }
     private boolean removeTextPartition(int position) {
