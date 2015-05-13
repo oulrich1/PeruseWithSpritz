@@ -10,7 +10,7 @@
 - Perusals can be removed
 - Perusals can be renamed
 - Perusals' text can NOT be edited
-- OCR could be better ( Improve filtering or perform isbn scanning instead, to find a digital copy )
+- Spritz Text Partitions are temporary and changes made to them are not persisted
 
 ## Note about saving the Perusals:
 The title of the perusals is limited to the first three words of the text.
@@ -21,22 +21,21 @@ URL to prevent multiple spritz web scrapes?)
 
 ## Known Issues:
 - Spritz text is too small on some devices. (Update epub text equivalently)
-- URL Link sharing opens the spritz fragment (through the 'peruse controller' aka edittext fragment) and the url is saved in a recent perusal item, but Spritz fails to load and "spritz" the url.. The current user workaround is to go to the recent perusals list and select the url just shared/added. then it works flawlessly. 
 - Main activity: Choosing intent assumes "*/*" intent type is for e-pubs, should just be "application/epub+zip". On phone and simulator, sharing/sending epub from filesystem with the app created an intent with type "*/*". unexpected..
-- E-Pub UI is plain. ( Buttons or no buttons? Swipey views! )
+- E-Pub UI is plain
 - Text from an e-pub "page" is saved to recent list when Spritzed. Subject to change.
-- Canceling during ocr causes app to crash..
 
 ## Todo
-- Wearable Spritz Views. If wearable is present, send text data to the watch instead on "Spritz"
-- Implement Spritz view subclass that ties in with the wearable 'fragments' ( to create views while computing the tings )
-- Feature to change font type for reading purposes
-- seperate text catagories: text, url, epub, images
-- Share URL to epub
-- Fix issues
-
-## Long Term
-- Figure out a way to easily access the book based on isbn number
 - Perusal Sharing 
-- PDF support?
+- Figure out a way to easily access the book based on isbn number
+- PDF support
+
+- Wearable Spritz Views
+- Font settings
+- Instructions on how to use app
+- Share URL that points to EPUB on internet (download epub and open as usual..)
+
+
+
+
 
