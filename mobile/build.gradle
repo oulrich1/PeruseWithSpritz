@@ -9,7 +9,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 21
 //        versionCode 200124
-        versionName "0.4.2"
+        versionName "0.4.3"
         ndk {
             moduleName "TessWrapperNDKModule"
 //            cFlags "-DANDROID_NDK -D_DEBUG DNULL=0"   // Define some macros
@@ -18,7 +18,8 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 144
+    defaultConfig.versionCode = 145
+
 
     productFlavors {
         x86 {
@@ -79,6 +80,7 @@ dependencies {
     compile 'com.android.support:support-v4:22.0.0'
     compile 'com.android.support:appcompat-v7:22.0.0'
     compile 'com.spritzinc.android:spritz-sdk:1.3.0'
+//    compile 'com.google.android.gms:play-services:7.3.0'
     compile 'com.github.johnkil.android-robototextview:robototextview:2.2.0'
 //    compile project(':Libraries:opencv')
     compile 'com.github.amlcurran.showcaseview:library:5.0.0'

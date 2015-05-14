@@ -91,8 +91,6 @@ public class TextPartitionsAdapter extends BaseAdapter {
         remove(mTextPartitions.indexOf(object));
     }
     public void remove(int position) {
-        mTextPartitions.remove(position);
-
         // true if the item to delete is the last item in the list
         boolean bIsRemoveCurSpritzLastItem =
                 (m_nCurSelectedPartitionIdx == position) &&
@@ -105,6 +103,8 @@ public class TextPartitionsAdapter extends BaseAdapter {
         // the current spritzing item (Since we want the index to reference the
         // next item to read not the previous one) .. also definitely don't
         // decrement index if the item to delete is past the item current selected..
+
+        mTextPartitions.remove(position);
 
         notifyDataSetChanged();
     }
