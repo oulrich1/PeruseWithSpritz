@@ -109,4 +109,8 @@
         <item>0</item>
         <item>1</item>
     </integer-array>
+
+    <!-- Ads -->
+    <!-- (1) test ad -->
+    <string name="banner_ad_unit_id_test">ca-app-pub-3940256099942544/6300978111</string>
 </resources>

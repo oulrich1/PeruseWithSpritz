@@ -6,23 +6,17 @@ import android.app.FragmentManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.renderscript.Element;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
-import android.text.TextPaint;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewTreeObserver;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.Button;
@@ -30,15 +24,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.oriahulrich.perusalwithspritz.Settings.SetPreferencesActivity;
-import com.oriahulrich.perusalwithspritz.ThirdParty.PageSplitter;
-import com.oriahulrich.perusalwithspritz.ThirdParty.TextPagerAdapter;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 
-/** Jsoup is awesome! */
-// http://jsoup.org/
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Node;
 import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
@@ -46,19 +35,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
+import nl.siegmann.epublib.domain.Book;
+import nl.siegmann.epublib.domain.Resource;
+import nl.siegmann.epublib.domain.Spine;
+import nl.siegmann.epublib.domain.SpineReference;
+
+/**
+ * Jsoup is awesome!  epublib references:
+ */
+// http://jsoup.org/
 /** epublib references: */
 // http://www.siegmann.nl/epublib/faq
 // https://github.com/psiegman/epublib/blob/master/epublib-
 // tools/src/test/java/nl/siegmann/epublib/search/SearchIndexTest.java
-import nl.siegmann.epublib.domain.Book;
-import nl.siegmann.epublib.domain.Resource;
-import nl.siegmann.epublib.domain.Resources;
-import nl.siegmann.epublib.domain.Spine;
-import nl.siegmann.epublib.domain.SpineReference;
 
 
 /**
@@ -471,12 +462,18 @@ public class PerusalEpubFragment extends Fragment {
             }
         }
 
+        /* Now with the text variable, do spritzing on such text */
         // navigate to the spritzing fragment
         int peruseSectionNumber = 1;
-        boolean shouldAttemptSavePerusal = true;
-        Fragment fragment = PerusalSpritzFragment
-                .newInstance( peruseSectionNumber, textState,
-                        text, shouldAttemptSavePerusal );
+
+        // create temporary perusal object to conform to the spritz frag
+        Perusal perusal = new Perusal();
+        perusal.setModeInt(textState);
+        perusal.setText(text);
+        perusal.bShouldSaveToDB = true;
+
+        // create the spritz fragment
+        Fragment fragment = PerusalSpritzFragment.newInstance(peruseSectionNumber, perusal);
 
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()

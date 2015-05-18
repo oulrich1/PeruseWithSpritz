@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 import com.oriahulrich.perusalwithspritz.lib.Helpers;
+import com.oriahulrich.perusalwithspritz.pojos.Perusal;
 import com.spritzinc.android.sdk.SpritzSDK;
 
 import java.io.File;
@@ -664,11 +665,17 @@ public class MainActivity extends ActionBarActivity
     // BUT: epub fragment uses a custom navigation transaction to spritzing fragment
     public void navigateToSpritzFragment(int textState, String msg) {
         int peruseSectionNumber = 1; // force section nav number
-        boolean shouldAttemptSavePerusal = true;
-        Fragment fragment = PerusalSpritzFragment
-                .newInstance( peruseSectionNumber, textState,
-                        msg, shouldAttemptSavePerusal );
 
+        // create temporary perusal object to conform to the spritz frag
+        Perusal perusal = new Perusal();
+        perusal.setModeInt(textState);
+        perusal.setText(msg);
+        perusal.bShouldSaveToDB = true;
+
+        // create the spritz fragment
+        Fragment fragment = PerusalSpritzFragment.newInstance(peruseSectionNumber, perusal);
+
+        // transition to that new spritz fragment instance
         FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)

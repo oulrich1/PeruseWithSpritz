@@ -9,7 +9,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 21
 //        versionCode 200124
-        versionName "0.4.3"
+        versionName "0.4.6"
         ndk {
             moduleName "TessWrapperNDKModule"
 //            cFlags "-DANDROID_NDK -D_DEBUG DNULL=0"   // Define some macros
@@ -18,7 +18,7 @@ android {
         }
     }
 
-    defaultConfig.versionCode = 145
+    defaultConfig.versionCode = 148
 
 
     productFlavors {
@@ -73,20 +73,26 @@ android {
     }
 }
 
+allprojects {
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     wearApp project(':wear')
-    compile 'com.google.android.gms:play-services-wearable:+'
-    compile 'com.android.support:support-v4:22.0.0'
-    compile 'com.android.support:appcompat-v7:22.0.0'
+    compile 'com.android.support:support-v4:22.1.1'
+    compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.spritzinc.android:spritz-sdk:1.3.0'
-//    compile 'com.google.android.gms:play-services:7.3.0'
     compile 'com.github.johnkil.android-robototextview:robototextview:2.2.0'
 //    compile project(':Libraries:opencv')
     compile 'com.github.amlcurran.showcaseview:library:5.0.0'
     compile files('libs/epublib-core-latest.jar')
     //    compile files('libs/slf4j-android-1.6.1-RC1.jar')
     compile files('libs/jsoup-1.8.1.jar')
-    compile 'com.github.hotchemi:stringpicker:0.0.2'
-
+    compile 'com.google.android.gms:play-services-ads:7.3.0'
 }
+

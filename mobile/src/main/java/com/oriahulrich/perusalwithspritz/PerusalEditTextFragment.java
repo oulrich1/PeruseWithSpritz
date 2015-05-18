@@ -275,22 +275,6 @@ public class PerusalEditTextFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-
-//    // given the text state -> msg can be either text or a url..
-//    // NOTE: this is the only entry point to spritzing.. just FYI
-//    private void navigateToSpritzFragment(int textState, String msg) {
-//        int peruseSectionNumber = 1; // force section nav number
-//        boolean shouldAttemptSavePerusal = true;
-//        Fragment fragment = PerusalSpritzFragment
-//                .newInstance( peruseSectionNumber, textState,
-//                        msg, shouldAttemptSavePerusal );
-//
-//        FragmentManager fragmentManager = getFragmentManager();
-//        fragmentManager.beginTransaction()
-//                .replace(R.id.container, fragment)
-//                .commit();
-//    }
-
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

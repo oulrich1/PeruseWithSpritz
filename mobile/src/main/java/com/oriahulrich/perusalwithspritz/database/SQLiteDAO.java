@@ -30,6 +30,7 @@ public class SQLiteDAO {
             SQLiteDBHelper.COLUMN_ID,
             SQLiteDBHelper.COLUMN_TITLE,
             SQLiteDBHelper.COLUMN_TEXT,
+            SQLiteDBHelper.COLUMN_TEXT_PARTITION_IDX,
             SQLiteDBHelper.COLUMN_SPEED,
             SQLiteDBHelper.COLUMN_MODE
     };
@@ -50,6 +51,7 @@ public class SQLiteDAO {
         sqLiteDBHelper.close();
     }
 
+    // create if not duplciate
     public Perusal createPerusal(Perusal perusal)
     {
         String perusalTitle = perusal.getTitle();
@@ -74,6 +76,7 @@ public class SQLiteDAO {
         ContentValues contentValues = new ContentValues(); // toLowerCase()
         contentValues.put( SQLiteDBHelper.COLUMN_TITLE, perusalTitle.trim() );
         contentValues.put( SQLiteDBHelper.COLUMN_TEXT,  perusal.getText().toLowerCase().trim() );
+        contentValues.put( SQLiteDBHelper.COLUMN_TEXT_PARTITION_IDX,  perusal.getTextPartitionIndex());
         contentValues.put( SQLiteDBHelper.COLUMN_SPEED, perusal.getSpeed() );
         contentValues.put( SQLiteDBHelper.COLUMN_MODE, perusal.getMode().ordinal() );
 
@@ -98,12 +101,12 @@ public class SQLiteDAO {
                 null, null, null, null
         );
 
+        /* Retrieve from database and return this value.
+           Not strictly necessary but nice for testing */
         Perusal newPerusal;
         if ( cursor.moveToFirst() && cursor.getCount() != 0 ) {
              newPerusal = cursorToPerusal(cursor);
-        }
-        else
-        {
+        } else {
             newPerusal = perusal;
         }
         cursor.close();
@@ -135,18 +138,39 @@ public class SQLiteDAO {
         }
 
         ContentValues newContentValues = new ContentValues();
-        newContentValues.put("title", newPerusalTitle.trim());
+        newContentValues.put(SQLiteDBHelper.COLUMN_TITLE, newPerusalTitle.trim());
 
         return sqLiteDatabase.update(
                 SQLiteDBHelper.TABLE_PERUSALS,
                 newContentValues,
-                "title = \"" + oldPerusalTitle + "\"",
+                SQLiteDBHelper.COLUMN_TITLE + " = \"" + oldPerusalTitle + "\"", // ie: "title = 'theOldTitle'"
+                null
+        );
+    }
+
+    // the perusal object stores the un-mutable id. this method
+    // takes perusal, and updates the DB's entry for this perusal
+    // with the perusal's current Text Partition index
+    public int updatePerusalCurSelectionIdx(Perusal perusal) {
+        if (perusal.getTextPartitionIndex() < 0) {
+            Log.d(TAG, "updatePerusalCurSelectionIdx got a negative perusal text partition index");
+            return 0;
+        }
+
+        ContentValues newContentValues = new ContentValues();
+        newContentValues.put(SQLiteDBHelper.COLUMN_TEXT_PARTITION_IDX,
+                perusal.getTextPartitionIndex());
+
+        return sqLiteDatabase.update(
+                SQLiteDBHelper.TABLE_PERUSALS,
+                newContentValues,
+                SQLiteDBHelper.COLUMN_ID + " = \"" + perusal.getId() + "\"",
                 null
         );
     }
 
     public ArrayList<Perusal> getAllPerusals() {
-        ArrayList<Perusal> PerusalList = new ArrayList<Perusal>();
+        ArrayList<Perusal> PerusalList = new ArrayList<>();
 
         Cursor cursor;
         cursor = sqLiteDatabase.query(
@@ -171,8 +195,9 @@ public class SQLiteDAO {
         perusal.setId(cursor.getLong(0));
         perusal.setTitle(cursor.getString(1));
         perusal.setText(cursor.getString(2));
-        perusal.setSpeed(cursor.getInt(3));
-        perusal.setModeInt(cursor.getInt(4));
+        perusal.setTextPartitionIndex(cursor.getInt(3));
+        perusal.setSpeed(cursor.getInt(4));
+        perusal.setModeInt(cursor.getInt(5));
         return perusal;
     }
 

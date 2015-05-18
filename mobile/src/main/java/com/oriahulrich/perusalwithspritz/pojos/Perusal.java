@@ -1,7 +1,5 @@
 package com.oriahulrich.perusalwithspritz.pojos;
 
-import com.oriahulrich.perusalwithspritz.PerusalSpritzFragment;
-
 import java.util.Date;
 
 /**
@@ -9,11 +7,12 @@ import java.util.Date;
  */
 public class Perusal {
 
-    /* Private POJO fields YO */
+    /* Private POJO fields */
 
     private long    _id;    // for DB stuff
     private String  title;  // predicted or set title
     private String  text;   // text stored to be spritzed
+    private int     nTextPartitionIndex; // stored whenever the selection changes
     private int     speed;  // WPM
     private Mode    mode;   // perusal mode is either URL or raw text
 
@@ -21,6 +20,9 @@ public class Perusal {
     private String  urlLink;//
     private Date    date;   // date that the item was added
     private int     words;  //
+
+    // not saved to database
+    public boolean bShouldSaveToDB;
 
     public enum SpeedState {
         SLOW,
@@ -42,15 +44,26 @@ public class Perusal {
     }
 
 
-    private void init() {
+    public int getTextPartitionIndex() {
+        return nTextPartitionIndex;
+    }
+
+    public void setTextPartitionIndex(int nTextPartitionIndex) {
+        this.nTextPartitionIndex = nTextPartitionIndex;
+    }
+
+    public void init() {
         title       = "";
         text        = "";
+        nTextPartitionIndex = 0;
         speed       = 300;
         mode        = Mode.TEXT;
         date        = new Date();
         words       = 0;
         urlLink     = "https://";
         speedState  = SpeedState.SLOW;
+
+        bShouldSaveToDB = false;
     }
 
         /// --- Getters and Setters --- ///
@@ -67,14 +80,13 @@ public class Perusal {
         return mode;
     }
 
-    public void setMode(Mode mode) {
-        this.mode = mode;
-    }
+    public void setMode(Mode mode) { this.mode = mode; }
+
     public void setModeInt(int mode) {
         if (mode == Mode.TEXT.ordinal()) {
-            this.mode = Mode.TEXT;
+            setMode(Mode.TEXT);
         } else if (mode == Mode.URL.ordinal()) {
-            this.mode = Mode.URL;
+            setMode(Mode.URL);
         }
     }
 
@@ -127,6 +139,8 @@ public class Perusal {
         }
     }
 
+
+    // not used
     public String getUrlLink() {
         return urlLink;
     }

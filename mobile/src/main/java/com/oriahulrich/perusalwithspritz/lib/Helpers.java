@@ -322,13 +322,23 @@ public class Helpers {
         return itemHeight;
     }
 
+    public static Point getDeviceSize(Context context) {
+        Point size = new Point(-1,-1); // invalid size
+        if (context == null) return size;
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        Display display = wm.getDefaultDisplay(); // the display that we see
+        display.getSize(size);
+        return size;
+    }
+
     public static int getDeviceWidth(Context context) {
         if (context == null) return -1;
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        Display display = wm.getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        return size.x;
+        return getDeviceSize(context).x;
+    }
+
+    public static int getDeviceHeight(Context context) {
+        if (context == null) return -1;
+        return getDeviceSize(context).y;
     }
 
 }

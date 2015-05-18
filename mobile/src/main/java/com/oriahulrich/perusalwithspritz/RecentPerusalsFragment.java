@@ -23,6 +23,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.oriahulrich.perusalwithspritz.adapters.RecentPerusalsAdapter;
 import com.oriahulrich.perusalwithspritz.database.SQLiteDAO;
 import com.oriahulrich.perusalwithspritz.pojos.Perusal;
@@ -46,6 +48,8 @@ public class RecentPerusalsFragment extends ListFragment {
 
     private SQLiteDAO sqLiteDAO;
     private RecentPerusalsAdapter recentPerusalsAdapter;
+
+    private AdView mAdView;
 
     /**
      * Returns a new instance of this fragment for the given section
@@ -72,9 +76,6 @@ public class RecentPerusalsFragment extends ListFragment {
         Log.d(TAG, " onCreate");
         super.onCreate(savedInstanceState);
         sqLiteDAO = ((MainActivity)getActivity()).getSqLiteDAO();
-//        sqLiteDAO = new SQLiteDAO(getActivity());
-//        sqLiteDAO.open();
-//        setHasOptionsMenu(true);
     }
 
     @Override
@@ -86,6 +87,10 @@ public class RecentPerusalsFragment extends ListFragment {
 
         // enabled getting notified when action bar item is clicked
         setHasOptionsMenu(true);
+
+        mAdView = (AdView) rootView.findViewById(R.id.adViewRecentPerusals);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
         return rootView;
     }
@@ -118,11 +123,7 @@ public class RecentPerusalsFragment extends ListFragment {
 //                        Toast.LENGTH_SHORT).show();
                 // recentPerusalsAdapter.itemClickListener(view, position);
                 Perusal perusal = recentPerusalsAdapter.getItem(position);
-
-                Fragment fragment = PerusalSpritzFragment
-                        .newInstance( position + 1,
-                                perusal.getMode().ordinal(),
-                                perusal.getText(), false );
+                Fragment fragment = PerusalSpritzFragment.newInstance(position + 1, perusal);
 
                 // update the main content by replacing fragments
                 FragmentManager fragmentManager = getFragmentManager();
